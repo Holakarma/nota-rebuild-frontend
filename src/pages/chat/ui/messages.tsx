@@ -1,18 +1,19 @@
 import { chatQueries } from '@entities/chat';
-import { Stack, CircularProgress, Alert } from '@mui/material';
+import { Alert, CircularProgress, Stack } from '@mui/material';
+import type { ChatMessageResponseDto } from '@shared/api';
 import { MessageList } from '@shared/ui/message-list';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { MessageItem } from './message.item';
 
-type MessagesType = {
+type MessagesProps = {
 	chatId: string;
 };
 
-export const Messages = ({ chatId }: MessagesType) => {
+export const Messages = ({ chatId }: MessagesProps) => {
 	const query = useInfiniteQuery(chatQueries.messagesInfinite({ chatId }));
 
-	const messages = useMemo(() => {
+	const messages = useMemo<ChatMessageResponseDto[] | undefined>(() => {
 		if (!query.data) {
 			return undefined;
 		}
@@ -51,12 +52,13 @@ export const Messages = ({ chatId }: MessagesType) => {
 	}
 
 	return (
-		<MessageList
+		<MessageList<ChatMessageResponseDto>
 			messages={messages}
 			hasNextPage={query.hasNextPage}
 			isFetchingNextPage={query.isFetchingNextPage}
 			fetchNextPage={query.fetchNextPage}
 			itemHeight={35 + 8}
+			isOwnMessage={(message) => message.role === 'USER'}
 			item={({ message }) => <MessageItem message={message} />}
 			loader={() => (
 				<Stack

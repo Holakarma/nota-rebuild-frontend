@@ -1,62 +1,46 @@
 import {
-	useVirtualizer as useTanstackVirtualizer,
+	type ReactVirtualizerOptions,
 	type Virtualizer,
-	type VirtualItem,
+	useVirtualizer as useTanstackVirtualizer,
 } from '@tanstack/react-virtual';
-import { useCallback } from 'react';
-import type { Key } from 'react';
 
-export type MessageListVirtualizer = Virtualizer<
-	HTMLDivElement,
-	HTMLDivElement
+type UseVirtualizerOptions<
+	TScrollElement extends Element,
+	TItemElement extends Element,
+> = Pick<
+	ReactVirtualizerOptions<TScrollElement, TItemElement>,
+	'count' | 'estimateSize' | 'getItemKey' | 'getScrollElement'
 >;
 
-export type ShouldAdjustScrollPositionOnItemSizeChange = (
-	item: VirtualItem,
-	delta: number,
-	instance: MessageListVirtualizer,
-) => boolean;
-
-export type MessageListVirtualizerOptions = Parameters<
-	typeof useTanstackVirtualizer<HTMLDivElement, HTMLDivElement>
->[0] & {
-	shouldAdjustScrollPositionOnItemSizeChange?: ShouldAdjustScrollPositionOnItemSizeChange;
-};
-
-export type UseVirtualizerProps = {
-	count: number;
-	getScrollElement: () => HTMLDivElement | null;
-	itemHeight: number;
-	getItemKey: ((index: number) => Key) | undefined;
-};
-
-export const useVirtualizer = ({
+export const useVirtualizer = <
+	TScrollElement extends Element = HTMLDivElement,
+	TItemElement extends Element = HTMLDivElement,
+>({
 	count,
 	getScrollElement,
-	itemHeight,
+	estimateSize,
 	getItemKey,
-}: UseVirtualizerProps) => {
-	const estimateSize = useCallback(() => itemHeight, [itemHeight]);
-	const shouldAdjustScrollPositionOnItemSizeChange =
-		useCallback<ShouldAdjustScrollPositionOnItemSizeChange>(
-			(virtualItem, _delta, instance) => {
-				const first = instance.getVirtualItems()[0];
-				return first ? virtualItem.index < first.index : false;
-			},
-			[],
-		);
-
-	const virtualizerOptions: MessageListVirtualizerOptions = {
+}: UseVirtualizerOptions<
+	TScrollElement,
+	TItemElement
+>): Virtualizer<TScrollElement, TItemElement> => {
+	const virtualizer = useTanstackVirtualizer<TScrollElement, TItemElement>({
 		count,
 		getScrollElement,
 		estimateSize,
+		getItemKey,
 		overscan: 4,
 		useAnimationFrameWithResizeObserver: true,
-		getItemKey,
-		shouldAdjustScrollPositionOnItemSizeChange,
+	});
+
+	virtualizer.shouldAdjustScrollPositionOnItemSizeChange = (
+		virtualItem,
+		_delta,
+		instance,
+	) => {
+		const first = instance.getVirtualItems()[0];
+		return first ? virtualItem.index < first.index : false;
 	};
 
-	return useTanstackVirtualizer<HTMLDivElement, HTMLDivElement>(
-		virtualizerOptions,
-	);
+	return virtualizer;
 };

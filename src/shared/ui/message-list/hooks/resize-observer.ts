@@ -1,42 +1,38 @@
-import { useLayoutEffect, useState, type RefObject } from 'react';
+import { useState, useLayoutEffect } from "react";
 
-export const useResizeObserver = (
-	parentRef: RefObject<HTMLDivElement | null>,
-) => {
-	const [containerHeight, setContainerHeight] = useState(0);
+export type ResizeObserverProps = React.RefObject<HTMLDivElement | null>
 
-	useLayoutEffect(() => {
-		const element = parentRef.current;
+export const useResizeObserver = (ref: ResizeObserverProps) => {
+    const [containerHeight, setContainerHeight] = useState(0);
 
-		if (!element) {
-			return undefined;
-		}
+    useLayoutEffect(() => {
+        const element = ref.current;
+        if (!element) {
+            return undefined;
+        }
 
-		const updateHeight = () => {
-			const nextHeight = element.clientHeight;
-			setContainerHeight((height) =>
-				height === nextHeight ? height : nextHeight,
-			);
-		};
+        const updateHeight = () => {
+            setContainerHeight(element.clientHeight);
+        };
 
-		updateHeight();
+        updateHeight();
 
-		if (typeof ResizeObserver === 'undefined') {
-			if (typeof window === 'undefined') {
-				return undefined;
-			}
+        if (typeof ResizeObserver === 'undefined') {
+            if (typeof window === 'undefined') {
+                return undefined;
+            }
 
-			window.addEventListener('resize', updateHeight);
-			return () => {
-				window.removeEventListener('resize', updateHeight);
-			};
-		}
+            window.addEventListener('resize', updateHeight);
+            return () => {
+                window.removeEventListener('resize', updateHeight);
+            };
+        }
 
-		const observer = new ResizeObserver(updateHeight);
-		observer.observe(element);
+        const observer = new ResizeObserver(updateHeight);
+        observer.observe(element);
 
-		return () => observer.disconnect();
-	}, [parentRef]);
+        return () => observer.disconnect();
+    }, [ref.current]);
 
-	return { containerHeight };
-};
+    return containerHeight
+}
