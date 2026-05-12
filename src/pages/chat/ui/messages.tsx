@@ -52,13 +52,12 @@ export const Messages = ({ chatId }: MessagesProps) => {
 	}
 
 	return (
-		<MessageList<ChatMessageResponseDto>
+		<MessageList
 			messages={messages}
 			hasNextPage={query.hasNextPage}
 			isFetchingNextPage={query.isFetchingNextPage}
 			fetchNextPage={query.fetchNextPage}
 			itemHeight={35 + 8}
-			isOwnMessage={(message) => message.role === 'USER'}
 			item={({ message }) => <MessageItem message={message} />}
 			loader={() => (
 				<Stack

@@ -1,7 +1,7 @@
-export { default as MessageList } from './message-list';
+export { default as MessageList } from './ui/message-list';
 export type {
 	ItemProps,
 	MessageListMessage,
 	MessageListProps,
 	MessageListType,
-} from './message-list';
+} from './ui/message-list';

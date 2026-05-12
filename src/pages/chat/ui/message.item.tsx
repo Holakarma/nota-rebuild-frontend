@@ -40,7 +40,7 @@ const UserMessage = ({ message }: MessageItemProps) => {
 const SystemMessage = ({ message }: MessageItemProps) => {
 	const noteQuery =
 		message.resultNoteId &&
-		useQuery(noteQueries.detail({ id: message.resultNoteId }));
+		useQuery(noteQueries.detail({ id: String(message.resultNoteId) }));
 
 	if (!noteQuery)
 		return (
