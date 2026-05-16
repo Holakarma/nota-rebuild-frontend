@@ -1,45 +1,70 @@
 import { NoteCard, noteQueries } from '@entities/note';
 import { streamQueries } from '@entities/stream';
 import { Alert, Box, CircularProgress, Grid, Stack } from '@mui/material';
+import { useThrottledState } from '@shared/lib/throttled-state';
 import {
 	DEFAULT_STREAM_ROUTE_PARAM,
 	routeConfig,
 } from '@shared/model/route.config';
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 
 type NoteGridProps = {
 	selectedStreamId?: string;
 	hasInvalidStreamId: boolean;
+	searchQuery?: string;
 };
 
 const PAGE_LIMIT = 20;
+const SIMILAR_NOTES_LIMIT = 50;
+const SEARCH_THROTTLE_MS = 700;
+const MAX_SEARCH_QUERY_LENGTH = 500;
 const noteLinkStyle = {
 	color: 'inherit',
 	textDecoration: 'none',
 	display: 'block',
 } as const;
+const normalizeSearchQuery = (query = '') =>
+	query.trim().slice(0, MAX_SEARCH_QUERY_LENGTH);
 
 export const NoteGrid = ({
 	selectedStreamId,
 	hasInvalidStreamId,
+	searchQuery = '',
 }: NoteGridProps) => {
+	const normalizedSearchQuery = normalizeSearchQuery(searchQuery);
+	const throttledSearchQuery = useThrottledState(
+		normalizedSearchQuery,
+		SEARCH_THROTTLE_MS,
+	);
+	const isSearchMode = Boolean(normalizedSearchQuery);
 	const allNotesQuery = useQuery({
 		...noteQueries.list({
 			limit: PAGE_LIMIT,
 		}),
-		enabled: !selectedStreamId && !hasInvalidStreamId,
+		enabled: !isSearchMode && !selectedStreamId && !hasInvalidStreamId,
 	});
 	const streamNotesQuery = useQuery({
 		...streamQueries.notes({
 			streamId: selectedStreamId ?? '',
 			limit: PAGE_LIMIT,
 		}),
-		enabled: Boolean(selectedStreamId),
+		enabled: !isSearchMode && Boolean(selectedStreamId),
+	});
+	const similarNotesQuery = useQuery({
+		...noteQueries.similar({
+			query: throttledSearchQuery,
+			limit: SIMILAR_NOTES_LIMIT,
+		}),
+		enabled: isSearchMode && Boolean(throttledSearchQuery) && !hasInvalidStreamId,
+		placeholderData: keepPreviousData,
 	});
 
-	const notesQuery = selectedStreamId ? streamNotesQuery : allNotesQuery;
-	const notes = notesQuery.data?.result ?? [];
+	const listNotesQuery = selectedStreamId ? streamNotesQuery : allNotesQuery;
+	const notesQuery = isSearchMode ? similarNotesQuery : listNotesQuery;
+	const notes = isSearchMode
+		? (similarNotesQuery.data ?? [])
+		: (listNotesQuery.data?.result ?? []);
 	const noteRouteStreamId = selectedStreamId ?? DEFAULT_STREAM_ROUTE_PARAM;
 
 	if (notesQuery.isLoading) {

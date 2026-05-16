@@ -1,5 +1,6 @@
 import { currentUserQueries } from '@entities/user';
 import { Box, Container, Typography } from '@mui/material';
+import { DarkModeIcon } from '@shared/icons/dark-mode';
 import { Logo } from '@shared/ui/logo';
 import { useQuery } from '@tanstack/react-query';
 

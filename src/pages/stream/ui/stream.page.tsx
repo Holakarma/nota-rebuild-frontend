@@ -1,17 +1,19 @@
-import { MessageInput } from '@features/stream-message';
+import {
+	MessageInput,
+	useMessageDraftStore,
+} from '@features/stream-message';
 import { Box, Stack } from '@mui/material';
+import { isUuid } from '@shared/lib/isUuid';
 import { useParams } from '@tanstack/react-router';
 import { StreamSidebar } from '@widgets/stream-sidebar';
 import { NoteGrid } from './note-grid';
 import { StreamHeader } from '@widgets/stream-header';
 
-const UUID_PATTERN =
-	/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-const isUuid = (value?: string) => Boolean(value && UUID_PATTERN.test(value));
-
 const StreamPage = () => {
 	const params = useParams({ strict: false });
+	const messageDraft = useMessageDraftStore(
+		(state) => state.bodyMarkdown,
+	);
 	const rawStreamId =
 		typeof params.streamId === 'string' ? params.streamId : undefined;
 	const selectedStreamId = isUuid(rawStreamId) ? rawStreamId : undefined;
@@ -45,6 +47,7 @@ const StreamPage = () => {
 				<NoteGrid
 					selectedStreamId={selectedStreamId}
 					hasInvalidStreamId={hasInvalidStreamId}
+					searchQuery={messageDraft}
 				/>
 
 				<MessageInput
