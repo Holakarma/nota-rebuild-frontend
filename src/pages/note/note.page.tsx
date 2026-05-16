@@ -1,8 +1,11 @@
+import { noteQueries, useRemoveNoteMutation } from '@entities/note';
 import {
-	noteQueries,
-	useRemoveNoteMutation,
-} from '@entities/note';
-import { Box, Button, CircularProgress, Stack, Typography } from '@mui/material';
+	Box,
+	Button,
+	CircularProgress,
+	Stack,
+	Typography,
+} from '@mui/material';
 import { useUrlParams } from '@shared/lib/url-params';
 import {
 	DEFAULT_STREAM_ROUTE_PARAM,
@@ -123,6 +126,7 @@ const NotePage = ({ returnContext = 'default' }: NotePageProps) => {
 				key={noteQuery.data.id}
 				noteId={noteQuery.data.id}
 				initialBodyMarkdown={noteQuery.data.bodyMarkdown}
+				streams={noteQuery.data.streams}
 				disabled={isRemovingNote}
 			/>
 

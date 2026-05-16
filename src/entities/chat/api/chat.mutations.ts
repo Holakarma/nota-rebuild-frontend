@@ -1,6 +1,7 @@
 import {
 	useMutation,
 	useQueryClient,
+	type InfiniteData,
 	type UseMutationOptions,
 } from '@tanstack/react-query';
 import type { AxiosError } from 'axios';
@@ -9,6 +10,8 @@ import {
 	type ChatControllerCreateData,
 	type ChatControllerCreateMessageData,
 	type ChatControllerCreateMessageParams,
+	type ChatControllerEnsureData,
+	type ChatControllerFindMessagesData,
 	type CreateChatDto,
 	type CreateChatMessageDto,
 } from '@shared/api';
@@ -25,7 +28,11 @@ export type CreateChatMessageVariables = ChatControllerCreateMessageParams & {
 };
 
 type CreateChatMutationOptions = Omit<
-	UseMutationOptions<ChatControllerCreateData, AxiosError<void>, CreateChatDto>,
+	UseMutationOptions<
+		ChatControllerCreateData,
+		AxiosError<void>,
+		CreateChatDto
+	>,
 	'mutationFn' | 'mutationKey'
 >;
 
@@ -38,9 +45,19 @@ type CreateChatMessageMutationOptions = Omit<
 	'mutationFn' | 'mutationKey'
 >;
 
+type EnsureChatMutationOptions = Omit<
+	UseMutationOptions<
+		ChatControllerEnsureData,
+		AxiosError<void>,
+		CreateChatDto
+	>,
+	'mutationFn' | 'mutationKey'
+>;
+
 export const chatMutationKeys = {
 	all: () => [...chatQueryKeys.all(), 'mutation'] as const,
 	create: () => [...chatMutationKeys.all(), 'create'] as const,
+	ensure: () => [...chatMutationKeys.all(), 'ensure'] as const,
 	createMessage: (chatId?: string) =>
 		[...chatMutationKeys.all(), 'create-message', chatId] as const,
 };
@@ -50,6 +67,15 @@ export const createChat = async (
 ): Promise<ChatControllerCreateData> => {
 	const validData = CreateChatSchema.parse(data);
 	const response = await api.chat.chatControllerCreate(validData);
+
+	return response.data;
+};
+
+export const ensureChat = async (
+	data: CreateChatDto,
+): Promise<ChatControllerEnsureData> => {
+	const validData = CreateChatSchema.parse(data);
+	const response = await api.chat.chatControllerEnsure(validData);
 
 	return response.data;
 };
@@ -77,8 +103,37 @@ export const useCreateChatMutation = (options?: CreateChatMutationOptions) => {
 		mutationFn: createChat,
 		onSuccess: async (data, variables, onMutateResult, context) => {
 			queryClient.setQueryData(chatQueryKeys.lists(), data);
-			await queryClient.invalidateQueries({ queryKey: chatQueryKeys.lists() });
-			await options?.onSuccess?.(data, variables, onMutateResult, context);
+			await queryClient.invalidateQueries({
+				queryKey: chatQueryKeys.lists(),
+			});
+			await options?.onSuccess?.(
+				data,
+				variables,
+				onMutateResult,
+				context,
+			);
+		},
+	});
+};
+
+export const useEnsureChatMutation = (options?: EnsureChatMutationOptions) => {
+	const queryClient = useQueryClient();
+
+	return useMutation({
+		...options,
+		mutationKey: chatMutationKeys.ensure(),
+		mutationFn: ensureChat,
+		onSuccess: async (data, variables, onMutateResult, context) => {
+			queryClient.setQueryData(chatQueryKeys.byStream(variables), data);
+			await queryClient.invalidateQueries({
+				queryKey: chatQueryKeys.lists(),
+			});
+			await options?.onSuccess?.(
+				data,
+				variables,
+				onMutateResult,
+				context,
+			);
 		},
 	});
 };
@@ -94,15 +149,39 @@ export const useCreateChatMessageMutation = (
 		mutationFn: createChatMessage,
 		onSuccess: async (data, variables, onMutateResult, context) => {
 			await Promise.all([
-				queryClient.setQueryData(chatQueryKeys.messageInfinite({ chatId: variables.chatId }), (oldData: any) => {
-					const [first, ...rest] = oldData.pages
+				queryClient.setQueryData<
+					InfiniteData<ChatControllerFindMessagesData> | undefined
+				>(
+					chatQueryKeys.messageInfinite({ chatId: variables.chatId }),
+					(oldData) => {
+						if (!oldData?.pages.length) {
+							return oldData;
+						}
 
-					return { ...oldData, pages: [{ ...first, result: [data, ...first.result] }, ...rest] }
+						const [first, ...rest] = oldData.pages;
+
+						return {
+							...oldData,
+							pages: [
+								{ ...first, result: [data, ...first.result] },
+								...rest,
+							],
+						};
+					},
+				),
+				queryClient.invalidateQueries({
+					queryKey: chatQueryKeys.lists(),
 				}),
-				queryClient.invalidateQueries({ queryKey: chatQueryKeys.lists() }),
-				queryClient.invalidateQueries({ queryKey: streamQueryKeys.lists() }),
+				queryClient.invalidateQueries({
+					queryKey: streamQueryKeys.lists(),
+				}),
 			]);
-			await options?.onSuccess?.(data, variables, onMutateResult, context);
+			await options?.onSuccess?.(
+				data,
+				variables,
+				onMutateResult,
+				context,
+			);
 		},
 	});
 };
