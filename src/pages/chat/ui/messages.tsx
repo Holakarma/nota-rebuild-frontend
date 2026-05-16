@@ -8,9 +8,10 @@ import { MessageItem } from './message.item';
 
 type MessagesProps = {
 	chatId: string;
+	streamId?: string;
 };
 
-export const Messages = ({ chatId }: MessagesProps) => {
+export const Messages = ({ chatId, streamId }: MessagesProps) => {
 	const query = useInfiniteQuery(chatQueries.messagesInfinite({ chatId }));
 
 	const messages = useMemo<ChatMessageResponseDto[] | undefined>(() => {
@@ -22,9 +23,12 @@ export const Messages = ({ chatId }: MessagesProps) => {
 
 	const renderMessage = useCallback(
 		({ message }: ItemProps<ChatMessageResponseDto>) => (
-			<MessageItem message={message} />
+			<MessageItem
+				message={message}
+				streamId={streamId}
+			/>
 		),
-		[],
+		[streamId],
 	);
 
 	const renderLoader = useCallback(

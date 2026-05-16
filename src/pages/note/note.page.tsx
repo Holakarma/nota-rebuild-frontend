@@ -11,34 +11,55 @@ import {
 	Stack,
 	Typography,
 } from '@mui/material';
+import { useUrlParams } from '@shared/lib/url-params';
+import {
+	DEFAULT_STREAM_ROUTE_PARAM,
+	routeConfig,
+} from '@shared/model/route.config';
 import { useQuery } from '@tanstack/react-query';
-import { useNavigate, useParams } from '@tanstack/react-router';
-import { useEffect, useState, type FormEvent } from 'react';
+import { useNavigate } from '@tanstack/react-router';
+import { SubmitEventHandler, useEffect, useState } from 'react';
 
-const UUID_PATTERN =
-	/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+type NoteReturnContext = 'default' | 'stream' | 'chat';
 
-const isUuid = (value?: string) => Boolean(value && UUID_PATTERN.test(value));
+type NotePageProps = {
+	returnContext?: NoteReturnContext;
+};
 
-const NotePage = () => {
+const NotePage = ({ returnContext = 'default' }: NotePageProps) => {
 	const navigate = useNavigate();
-	const params = useParams({ strict: false });
-	const rawNoteId = typeof params.noteId === 'string' ? params.noteId : undefined;
-	const noteId = isUuid(rawNoteId) ? rawNoteId : undefined;
-	const hasInvalidNoteId = Boolean(rawNoteId && !noteId);
+	const { noteId, streamId } = useUrlParams();
+
+	const isDefaultStream = streamId === DEFAULT_STREAM_ROUTE_PARAM;
+	const returnStreamId = isDefaultStream ? '' : (streamId ?? '');
+	const hasInvalidContext =
+		returnContext !== 'default' && !streamId && !isDefaultStream;
+
+	const goToNotes = () => {
+		if (returnContext === 'chat') {
+			return navigate({
+				to: routeConfig.chat,
+				params: { streamId: returnStreamId },
+			});
+		}
+
+		return navigate({
+			to: routeConfig.stream,
+			params: {
+				streamId: returnContext === 'stream' ? returnStreamId : '',
+			},
+		});
+	};
 	const noteQuery = useQuery({
 		...noteQueries.detail({
 			id: noteId ?? '',
 		}),
-		enabled: Boolean(noteId),
+		enabled: Boolean(noteId) && !hasInvalidContext,
 	});
 	const updateNoteMutation = useUpdateNoteMutation();
 	const removeNoteMutation = useRemoveNoteMutation({
 		onSuccess: async () => {
-			await navigate({
-				to: '/stream/{-$streamId}',
-				params: { streamId: '' },
-			});
+			await goToNotes();
 		},
 	});
 	const [bodyMarkdown, setBodyMarkdown] = useState('');
@@ -54,14 +75,7 @@ const NotePage = () => {
 		updateNoteMutation.isPending ||
 		removeNoteMutation.isPending;
 
-	const goToNotes = () => {
-		void navigate({
-			to: '/stream/{-$streamId}',
-			params: { streamId: '' },
-		});
-	};
-
-	const saveNote = (event: FormEvent<HTMLFormElement>) => {
+	const saveNote: SubmitEventHandler<HTMLFormElement> = (event) => {
 		event.preventDefault();
 
 		const nextBodyMarkdown = bodyMarkdown.trim();
@@ -102,7 +116,7 @@ const NotePage = () => {
 		);
 	}
 
-	if (!noteId || hasInvalidNoteId || noteQuery.isError) {
+	if (!noteId || noteQuery.isError) {
 		return (
 			<Box
 				component="main"
@@ -217,3 +231,7 @@ const NotePage = () => {
 };
 
 export default NotePage;
+
+export const StreamNotePage = () => <NotePage returnContext="stream" />;
+
+export const ChatNotePage = () => <NotePage returnContext="chat" />;

@@ -1,7 +1,10 @@
 import { NoteCard, noteQueries } from '@entities/note';
 import { streamQueries } from '@entities/stream';
 import { Alert, Box, CircularProgress, Grid, Stack } from '@mui/material';
-import { routeConfig } from '@shared/model/route.config';
+import {
+	DEFAULT_STREAM_ROUTE_PARAM,
+	routeConfig,
+} from '@shared/model/route.config';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 
@@ -11,6 +14,11 @@ type NoteGridProps = {
 };
 
 const PAGE_LIMIT = 20;
+const noteLinkStyle = {
+	color: 'inherit',
+	textDecoration: 'none',
+	display: 'block',
+} as const;
 
 export const NoteGrid = ({
 	selectedStreamId,
@@ -32,6 +40,7 @@ export const NoteGrid = ({
 
 	const notesQuery = selectedStreamId ? streamNotesQuery : allNotesQuery;
 	const notes = notesQuery.data?.result ?? [];
+	const noteRouteStreamId = selectedStreamId ?? DEFAULT_STREAM_ROUTE_PARAM;
 
 	if (notesQuery.isLoading) {
 		return (
@@ -78,26 +87,24 @@ export const NoteGrid = ({
 				sx={{ alignItems: 'start' }}
 			>
 				{notes.map((note) => {
+					const noteCard = (
+						<NoteCard
+							text={note.previewText}
+							tags={note.streams.map((s) => s.name).join(', ')}
+						/>
+					);
+
 					return (
 						<Grid
 							key={note.id}
 							size={4}
 						>
 							<Link
-								to={routeConfig.note}
-								params={{ noteId: note.id }}
-								style={{
-									color: 'inherit',
-									textDecoration: 'none',
-									display: 'block',
-								}}
+								to={routeConfig.streamNote}
+								params={{ streamId: noteRouteStreamId, noteId: note.id }}
+								style={noteLinkStyle}
 							>
-								<NoteCard
-									text={note.previewText}
-									tags={note.streams
-										.map((s) => s.name)
-										.join(', ')}
-								/>
+								{noteCard}
 							</Link>
 						</Grid>
 					);

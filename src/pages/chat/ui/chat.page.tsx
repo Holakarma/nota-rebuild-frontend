@@ -10,7 +10,10 @@ import { ChatInvalidStream } from './chat-invalid-stream';
 import { useQuery } from '@tanstack/react-query';
 import { chatQueries } from '@entities/chat';
 import { Messages } from './messages';
-import { routeConfig } from '@shared/model/route.config';
+import {
+	DEFAULT_STREAM_ROUTE_PARAM,
+	routeConfig,
+} from '@shared/model/route.config';
 import { StreamHeader } from '@widgets/stream-header';
 import { SearchResult } from '@features/search';
 
@@ -27,6 +30,7 @@ const ChatPage = () => {
 	const hasInvalidStreamId = Boolean(rawStreamId && !streamId);
 
 	const chatQuery = useQuery(chatQueries.byStream({ streamId }));
+	const noteRouteStreamId = streamId ?? DEFAULT_STREAM_ROUTE_PARAM;
 
 	const goToStreams = () => {
 		void navigate({
@@ -74,8 +78,15 @@ const ChatPage = () => {
 
 				{!chatQuery.isPending ? (
 					<>
-						<Messages chatId={chatQuery.data.id} />
-						<SearchResult query={messageDraft} />
+						<Messages
+							chatId={chatQuery.data.id}
+							streamId={noteRouteStreamId}
+						/>
+						<SearchResult
+							query={messageDraft}
+							noteLinkContext="chat"
+							streamId={noteRouteStreamId}
+						/>
 						<MessageInput
 							chatId={chatQuery.data?.id}
 							autoFocus

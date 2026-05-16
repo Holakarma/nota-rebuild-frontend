@@ -1,6 +1,6 @@
 import { noteQueries } from '@entities/note';
 import { streamQueries } from '@entities/stream';
-import { useThrottledState } from '@shared/lib/useThrottledState';
+import { useThrottledState } from '@shared/lib/throttled-state';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 
 type UseSearchParams = {

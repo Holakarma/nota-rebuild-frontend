@@ -2,7 +2,11 @@ import { createRouter } from '@tanstack/react-router';
 
 import { createChatRoute } from '@pages/chat';
 import { createLoginRoute } from '@pages/login';
-import { createNoteRoute } from '@pages/note';
+import {
+	createChatNoteRoute,
+	createNoteRoute,
+	createStreamNoteRoute,
+} from '@pages/note';
 import { createProfileRoute } from '@pages/profile';
 import { createRegisterRoute } from '@pages/register';
 import { createStreamRoute } from '@pages/stream';
@@ -21,6 +25,8 @@ const registerRoute = createRegisterRoute(publicOnlyRoute);
 const protectedRoute = createProtectedRoute(rootRoute);
 const profileRoute = createProfileRoute(protectedRoute);
 const noteRoute = createNoteRoute(protectedRoute);
+const streamNoteRoute = createStreamNoteRoute(protectedRoute);
+const chatNoteRoute = createChatNoteRoute(protectedRoute);
 const streamRoute = createStreamRoute(protectedRoute);
 const chatRoute = createChatRoute(protectedRoute);
 const protectedNotFoundRoute = createProtectedNotFoundRoute(protectedRoute);
@@ -30,6 +36,8 @@ const routeTree = rootRoute.addChildren([
 	protectedRoute.addChildren([
 		profileRoute,
 		noteRoute,
+		streamNoteRoute,
+		chatNoteRoute,
 		streamRoute,
 		chatRoute,
 		protectedNotFoundRoute,

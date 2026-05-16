@@ -1,1 +1,5 @@
-export { createNoteRoute } from './note.route';
+export {
+	createChatNoteRoute,
+	createNoteRoute,
+	createStreamNoteRoute,
+} from './note.route';

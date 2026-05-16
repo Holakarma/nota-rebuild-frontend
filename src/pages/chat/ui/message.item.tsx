@@ -7,13 +7,22 @@ import {
 	ChatMessageResultNoteResponseDto,
 	ChatMessageStreamResponseDto,
 } from '@shared/api';
+import { routeConfig } from '@shared/model/route.config';
+import { Link } from '@tanstack/react-router';
 import { memo } from 'react';
 
 type MessageItemProps = {
 	message: ChatMessageResponseDto;
+	streamId?: string;
 };
 
-const MessageItemComponent = ({ message }: MessageItemProps) => {
+const noteLinkStyle = {
+	color: 'inherit',
+	textDecoration: 'none',
+	display: 'block',
+} as const;
+
+const MessageItemComponent = ({ message, streamId }: MessageItemProps) => {
 	return (
 		<Stack
 			spacing={1}
@@ -21,7 +30,10 @@ const MessageItemComponent = ({ message }: MessageItemProps) => {
 		>
 			<UserMessage message={message} />
 
-			<SystemMessage message={message} />
+			<SystemMessage
+				message={message}
+				streamId={streamId}
+			/>
 		</Stack>
 	);
 };
@@ -57,14 +69,19 @@ const UserMessage = memo(({ message }: MessageItemProps) => {
 	);
 });
 
-const SystemMessage = memo(({ message }: MessageItemProps) => {
+const SystemMessage = memo(({ message, streamId }: MessageItemProps) => {
 	if (!message.result) return null;
 
 	const result = message.result;
 
 	return (
 		<Stack spacing={1}>
-			{result.note && <SystemMessageNote note={result.note} />}
+			{result.note && (
+				<SystemMessageNote
+					note={result.note}
+					streamId={streamId}
+				/>
+			)}
 			{!!result.streams.length && (
 				<SystemMessageStream streams={result.streams} />
 			)}
@@ -73,7 +90,20 @@ const SystemMessage = memo(({ message }: MessageItemProps) => {
 });
 
 const SystemMessageNote = memo(
-	({ note }: { note: ChatMessageResultNoteResponseDto }) => {
+	({
+		note,
+		streamId,
+	}: {
+		note: ChatMessageResultNoteResponseDto;
+		streamId?: string;
+	}) => {
+		const noteCard = (
+			<NoteCard
+				text={note.previewText}
+				tags={note.streamNames.join(', ')}
+			/>
+		);
+
 		return (
 			<Stack
 				sx={{ maxWidth: 400 }}
@@ -86,11 +116,21 @@ const SystemMessageNote = memo(
 					Заметка создана
 				</Typography>
 
-				<NoteCard
-					text={note.previewText}
-					tags={note.streamNames.join(', ')}
-					id={note.id}
-				/>
+				{streamId ? (
+					<Link
+						to={routeConfig.chatNote}
+						params={{ streamId, noteId: note.id }}
+						style={noteLinkStyle}
+					>
+						{noteCard}
+					</Link>
+				) : (
+					<NoteCard
+						text={note.previewText}
+						tags={note.streamNames.join(', ')}
+						id={note.id}
+					/>
+				)}
 			</Stack>
 		);
 	},
