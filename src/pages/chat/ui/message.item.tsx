@@ -1,7 +1,6 @@
 import { NoteCard } from '@entities/note';
 import { StreamCard } from '@entities/stream';
 import { Box, Stack, Typography } from '@mui/material';
-import { grey } from '@mui/material/colors';
 import {
 	ChatMessageResponseDto,
 	ChatMessageResultNoteResponseDto,
@@ -50,7 +49,8 @@ const UserMessage = memo(({ message }: MessageItemProps) => {
 					p: 1,
 					borderRadius: 1,
 					borderBottomRightRadius: 0,
-					backgroundColor: grey[400],
+					backgroundColor: 'primary.main',
+					color: 'primary.contrastText',
 					maxWidth: 400,
 					minWidth: 200,
 				}}

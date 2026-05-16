@@ -1,10 +1,16 @@
-import { createTheme } from '@mui/material';
+import { createTheme, type PaletteMode } from '@mui/material';
 
 import { typography } from './config/typography';
 
 const designColors = {
 	black: '#000000',
 	white: '#ffffff',
+	darkScrollbarTrack: '#121212',
+	darkScrollbarThumb: '#545454',
+	darkScrollbarThumbHover: '#747474',
+	lightScrollbarTrack: '#ffffff',
+	lightScrollbarThumb: '#b8b8b8',
+	lightScrollbarThumbHover: '#8f8f8f',
 	textSecondary: '#454545',
 	disabled: '#4c4c4c',
 	pressedText: '#7c7c7c',
@@ -16,52 +22,38 @@ const designColors = {
 	subtleHoverBackground: '#f7f7f7',
 };
 
-export const theme = createTheme({
+const scrollbarColors =
+	(mode: PaletteMode) => ({
+		track:
+			mode === 'light'
+				? designColors.lightScrollbarTrack
+				: designColors.darkScrollbarTrack,
+		thumb:
+			mode === 'light'
+				? designColors.lightScrollbarThumb
+				: designColors.darkScrollbarThumb,
+		thumbHover:
+			mode === 'light'
+				? designColors.lightScrollbarThumbHover
+				: designColors.darkScrollbarThumbHover,
+	});
+
+export const createAppTheme = (mode: PaletteMode) => createTheme({
 	palette: {
-		mode: 'light',
+		mode,
 		primary: {
-			main: designColors.black,
-			contrastText: designColors.white,
+			main: mode === 'light' ? designColors.black : designColors.white,
+			contrastText: mode === 'light' ? designColors.white : designColors.black,
 		},
-		/* common: {
-			black: designColors.black,
-			white: designColors.white,
-		},
-		background: {
-			default: designColors.white,
-			paper: designColors.white,
-		},
-		text: {
-			primary: designColors.black,
-			secondary: designColors.textSecondary,
-			disabled: designColors.disabled,
-		},
-		divider: designColors.black,
-		grey: {
-			50: designColors.subtleHoverBackground,
-			100: designColors.hoverBackground,
-			200: designColors.selectedBackground,
-			300: designColors.pressedBackground,
-			400: designColors.containedHoverText,
-			500: designColors.placeholder,
-			600: designColors.pressedText,
-			700: designColors.disabled,
-			800: designColors.textSecondary,
-			900: '#222222',
-		},
-		action: {
-			active: designColors.black,
-			hover: designColors.hoverBackground,
-			selected: designColors.selectedBackground,
-			disabled: designColors.disabled,
-			disabledBackground: designColors.disabled,
-		}, */
 	},
 
 	typography,
 	components: {
 		MuiCssBaseline: {
-			styleOverrides: `
+			styleOverrides: (() => {
+				const scrollbars = scrollbarColors(mode);
+
+				return `
 				@font-face {
 					font-family: 'Rubik';
 					font-style: normal;
@@ -85,7 +77,40 @@ export const theme = createTheme({
 					font-weight: 400;
 					src: url('/fonts/Molle/Molle_400Regular_Italic.ttf') format('truetype');
 				}
-				`,
+
+				html {
+					color-scheme: ${mode};
+				}
+
+				* {
+					scrollbar-width: thin;
+					scrollbar-color: ${scrollbars.thumb} ${scrollbars.track};
+				}
+
+				*::-webkit-scrollbar {
+					width: 8px;
+					height: 8px;
+				}
+
+				*::-webkit-scrollbar-track {
+					background: ${scrollbars.track};
+				}
+
+				*::-webkit-scrollbar-thumb {
+					background-color: ${scrollbars.thumb};
+					border: 2px solid ${scrollbars.track};
+					border-radius: 999px;
+				}
+
+				*::-webkit-scrollbar-thumb:hover {
+					background-color: ${scrollbars.thumbHover};
+				}
+
+				*::-webkit-scrollbar-corner {
+					background: ${scrollbars.track};
+				}
+				`;
+			})(),
 		},
 		MuiListItemButton: {
 			defaultProps: {
@@ -100,97 +125,7 @@ export const theme = createTheme({
 				disableFocusRipple: true,
 				disableTouchRipple: true
 			},
-			// 		styleOverrides: {
-			// 			root: {
-			// 				minHeight: 36,
-			// 				borderRadius: 0,
-			// 				boxSizing: 'border-box',
-			// 				display: 'inline-flex',
-			// 				alignItems: 'center',
-			// 				justifyContent: 'center',
-			// 				gap: 8,
-			// 				padding: '8px 16px',
-			// 				fontFamily: 'Rubik',
-			// 				fontSize: 20,
-			// 				fontWeight: 300,
-			// 				lineHeight: 1,
-			// 				letterSpacing: 0,
-			// 				textDecoration: 'none',
-			// 				textTransform: 'none',
-			// 				boxShadow: 'none',
-			// 				'&:hover': {
-			// 					boxShadow: 'none',
-			// 				},
-			// 				'&:active': {
-			// 					boxShadow: 'none',
-			// 				},
-			// 				'& img, & svg': {
-			// 					width: 24,
-			// 					height: 24,
-			// 					display: 'block',
-			// 					fontSize: 24,
-			// 				},
-			// 				'&.Mui-focusVisible': {
-			// 					outline: `1px solid ${designColors.black}`,
-			// 					outlineOffset: 2,
-			// 				},
-			// 			},
-			// 			contained: {
-			// 				border: '1px solid transparent',
-			// 				backgroundColor: designColors.black,
-			// 				color: designColors.white,
-			// 				'&:hover': {
-			// 					backgroundColor: designColors.black,
-			// 					color: designColors.containedHoverText,
-			// 				},
-			// 				'&:active': {
-			// 					backgroundColor: designColors.black,
-			// 					color: designColors.pressedText,
-			// 				},
-			// 				'&.Mui-disabled': {
-			// 					backgroundColor: designColors.disabled,
-			// 					color: designColors.white,
-			// 				},
-			// 			},
-			// 			outlined: {
-			// 				border: `1px solid ${designColors.black}`,
-			// 				backgroundColor: designColors.white,
-			// 				color: designColors.black,
-			// 				'&:hover': {
-			// 					border: `1px solid ${designColors.black}`,
-			// 					backgroundColor: designColors.hoverBackground,
-			// 				},
-			// 				'&:active': {
-			// 					border: `1px solid ${designColors.black}`,
-			// 					backgroundColor: designColors.pressedBackground,
-			// 				},
-			// 				'&.Mui-disabled': {
-			// 					border: `1px solid ${designColors.disabled}`,
-			// 					color: designColors.disabled,
-			// 				},
-			// 			},
-			// 			text: {
-			// 				color: designColors.black,
-			// 				backgroundColor: 'transparent',
-			// 				'&:hover': {
-			// 					backgroundColor: 'transparent',
-			// 					boxShadow: `inset 0 -1px 0 ${designColors.black}`,
-			// 				},
-			// 				'&:active': {
-			// 					backgroundColor: designColors.pressedBackground,
-			// 					boxShadow: 'none',
-			// 				},
-			// 				'&.Mui-disabled': {
-			// 					color: designColors.disabled,
-			// 				},
-			// 			},
-			// 			startIcon: {
-			// 				margin: 0,
-			// 			},
-			// 			endIcon: {
-			// 				margin: 0,
-			// 			},
-			// 		},
+
 		},
 		MuiIconButton: {
 			defaultProps: {
@@ -198,103 +133,8 @@ export const theme = createTheme({
 				disableFocusRipple: true,
 				disableTouchRipple: true
 			},
-			// 		styleOverrides: {
-			// 			root: {
-			// 				minHeight: 36,
-			// 				borderRadius: 0,
-			// 				padding: '8px 16px',
-			// 				color: designColors.black,
-			// 				'&:hover': {
-			// 					backgroundColor: designColors.hoverBackground,
-			// 				},
-			// 				'&:active': {
-			// 					backgroundColor: designColors.pressedBackground,
-			// 				},
-			// 				'&.Mui-disabled': {
-			// 					color: designColors.disabled,
-			// 				},
-			// 				'& img, & svg': {
-			// 					width: 24,
-			// 					height: 24,
-			// 					display: 'block',
-			// 					fontSize: 24,
-			// 				},
-			// 			},
-			// 		},
-			// 	},
-			// 	MuiInputBase: {
-			// 		styleOverrides: {
-			// 			root: {
-			// 				width: '100%',
-			// 				border: `1px solid ${designColors.black}`,
-			// 				borderRadius: 0,
-			// 				boxSizing: 'border-box',
-			// 				backgroundColor: designColors.white,
-			// 				fontFamily: 'Rubik',
-			// 				fontSize: 20,
-			// 				fontWeight: 400,
-			// 				lineHeight: 1,
-			// 				letterSpacing: 0,
-			// 				color: designColors.black,
-			// 				'&.Mui-focused': {
-			// 					outline: `1px solid ${designColors.black}`,
-			// 					outlineOffset: 2,
-			// 				},
-			// 			},
-			// 			input: {
-			// 				paddingBlock: 10,
-			// 			},
-			// 		},
+
 		},
-		// 	MuiCard: {
-		// 		styleOverrides: {
-		// 			root: {
-		// 				border: `1px solid ${designColors.black}`,
-		// 				borderRadius: 0,
-		// 				boxShadow: 'none',
-		// 				backgroundColor: designColors.white,
-		// 				color: designColors.black,
-		// 			},
-		// 		},
-		// 	},
-		// 	MuiCardContent: {
-		// 		styleOverrides: {
-		// 			root: {
-		// 				padding: '16px 32px',
-		// 				'&:last-child': {
-		// 					paddingBottom: 16,
-		// 				},
-		// 			},
-		// 		},
-		// 	},
-		// 	MuiListItemButton: {
-		// 		styleOverrides: {
-		// 			root: {
-		// 				padding: '8px 16px',
-		// 				borderRadius: 0,
-		// 				color: designColors.black,
-		// 				'&:hover': {
-		// 					backgroundColor: designColors.hoverBackground,
-		// 				},
-		// 				'&.Mui-selected': {
-		// 					backgroundColor: designColors.selectedBackground,
-		// 					'&:hover': {
-		// 						backgroundColor: designColors.selectedBackground,
-		// 					},
-		// 				},
-		// 			},
-		// 		},
-		// 	},
-		// 	MuiListItemText: {
-		// 		styleOverrides: {
-		// 			primary: {
-		// 				fontFamily: 'Rubik',
-		// 				fontSize: 24,
-		// 				fontWeight: 300,
-		// 				lineHeight: 1,
-		// 				letterSpacing: 0,
-		// 			},
-		// 		},
-		// 	},
+
 	},
 });

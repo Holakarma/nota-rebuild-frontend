@@ -1,16 +1,8 @@
 import {
 	noteQueries,
 	useRemoveNoteMutation,
-	useUpdateNoteMutation,
 } from '@entities/note';
-import {
-	Box,
-	Button,
-	CircularProgress,
-	InputBase,
-	Stack,
-	Typography,
-} from '@mui/material';
+import { Box, Button, CircularProgress, Stack, Typography } from '@mui/material';
 import { useUrlParams } from '@shared/lib/url-params';
 import {
 	DEFAULT_STREAM_ROUTE_PARAM,
@@ -18,7 +10,7 @@ import {
 } from '@shared/model/route.config';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
-import { SubmitEventHandler, useEffect, useState } from 'react';
+import { NoteContent } from './ui/note-content';
 
 type NoteReturnContext = 'default' | 'stream' | 'chat';
 
@@ -56,44 +48,15 @@ const NotePage = ({ returnContext = 'default' }: NotePageProps) => {
 		}),
 		enabled: Boolean(noteId) && !hasInvalidContext,
 	});
-	const updateNoteMutation = useUpdateNoteMutation();
 	const removeNoteMutation = useRemoveNoteMutation({
 		onSuccess: async () => {
 			await goToNotes();
 		},
 	});
-	const [bodyMarkdown, setBodyMarkdown] = useState('');
-
-	useEffect(() => {
-		if (noteQuery.data) {
-			setBodyMarkdown(noteQuery.data.bodyMarkdown);
-		}
-	}, [noteQuery.data]);
-
-	const isBusy =
-		noteQuery.isLoading ||
-		updateNoteMutation.isPending ||
-		removeNoteMutation.isPending;
-
-	const saveNote: SubmitEventHandler<HTMLFormElement> = (event) => {
-		event.preventDefault();
-
-		const nextBodyMarkdown = bodyMarkdown.trim();
-
-		if (!noteId || !nextBodyMarkdown || isBusy) {
-			return;
-		}
-
-		updateNoteMutation.mutate({
-			id: noteId,
-			data: {
-				bodyMarkdown: nextBodyMarkdown,
-			},
-		});
-	};
+	const isRemovingNote = removeNoteMutation.isPending;
 
 	const removeNote = () => {
-		if (!noteId || isBusy) {
+		if (!noteId || isRemovingNote) {
 			return;
 		}
 
@@ -116,7 +79,7 @@ const NotePage = ({ returnContext = 'default' }: NotePageProps) => {
 		);
 	}
 
-	if (!noteId || noteQuery.isError) {
+	if (!noteId || hasInvalidContext || noteQuery.isError || !noteQuery.data) {
 		return (
 			<Box
 				component="main"
@@ -156,37 +119,12 @@ const NotePage = ({ returnContext = 'default' }: NotePageProps) => {
 				pl: 1.5,
 			}}
 		>
-			<Box
-				component="form"
-				id="note-form"
-				onSubmit={saveNote}
-				sx={{
-					minHeight: 0,
-					display: 'grid',
-				}}
-			>
-				<InputBase
-					value={bodyMarkdown}
-					onChange={(event) => setBodyMarkdown(event.target.value)}
-					disabled={isBusy}
-					multiline
-					fullWidth
-					aria-label="Текст заметки"
-					inputProps={{ maxLength: 32768 }}
-					sx={{
-						height: '100%',
-						alignItems: 'flex-start',
-						'& .MuiInputBase-input': {
-							height: '100% !important',
-							boxSizing: 'border-box',
-							overflow: 'auto !important',
-							p: '14px 22px',
-							typography: 'R20',
-							lineHeight: 1.25,
-						},
-					}}
-				/>
-			</Box>
+			<NoteContent
+				key={noteQuery.data.id}
+				noteId={noteQuery.data.id}
+				initialBodyMarkdown={noteQuery.data.bodyMarkdown}
+				disabled={isRemovingNote}
+			/>
 
 			<Stack
 				direction="row"
@@ -198,33 +136,20 @@ const NotePage = ({ returnContext = 'default' }: NotePageProps) => {
 			>
 				<Button
 					variant="outlined"
-					disabled={isBusy}
+					disabled={isRemovingNote}
 					onClick={goToNotes}
 				>
 					Назад
 				</Button>
 
-				<Stack
-					direction="row"
-					spacing={1}
+				<Button
+					type="button"
+					variant="outlined"
+					disabled={isRemovingNote}
+					onClick={removeNote}
 				>
-					<Button
-						type="button"
-						variant="outlined"
-						disabled={isBusy}
-						onClick={removeNote}
-					>
-						Удалить
-					</Button>
-					<Button
-						type="submit"
-						form="note-form"
-						variant="contained"
-						disabled={isBusy || !bodyMarkdown.trim()}
-					>
-						Сохранить
-					</Button>
-				</Stack>
+					Удалить
+				</Button>
 			</Stack>
 		</Box>
 	);

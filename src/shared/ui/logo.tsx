@@ -8,6 +8,12 @@ export const Logo = (props: LogoProps) => {
 			{...props}
 			variant="Logo"
 			component={props.component ?? 'div'}
+			sx={[
+				{
+					color: 'primary.main',
+				},
+				...(Array.isArray(props.sx) ? props.sx : [props.sx]),
+			]}
 		>
 			Nota
 		</Typography>

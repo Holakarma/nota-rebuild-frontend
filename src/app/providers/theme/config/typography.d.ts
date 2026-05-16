@@ -15,7 +15,19 @@ export type CustomTypographyVariant =
     | 'L24'
     | 'L20'
     | 'L16'
-    | 'L12';
+    | 'L12'
+    | 'NoteMarkdownH1'
+    | 'NoteMarkdownH2'
+    | 'NoteMarkdownH3'
+    | 'NoteMarkdownH4'
+    | 'NoteMarkdownH5'
+    | 'NoteMarkdownH6'
+    | 'NoteMarkdownBody'
+    | 'NoteMarkdownInput'
+    | 'NoteMarkdownInlineBold'
+    | 'NoteMarkdownInlineItalic'
+    | 'NoteMarkdownInlineCode'
+    | 'NoteMarkdownCodeBlock';
 
 declare module '@mui/material/styles' {
     interface TypographyVariants extends Record<CustomTypographyVariant, CSSProperties> {}
