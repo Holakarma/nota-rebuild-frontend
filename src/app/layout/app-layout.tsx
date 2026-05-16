@@ -2,7 +2,7 @@ import { Box, Container } from '@mui/material';
 import { Header } from '@widgets/header';
 import { Outlet } from '@tanstack/react-router';
 
-export const ProtectedLayout = () => {
+export const Layout = () => {
 	return (
 		<Box
 			sx={{

@@ -10,8 +10,6 @@
  * ---------------------------------------------------------------
  */
 
-export type ChatMessageKind = "USER_INPUT" | "NOTE_CREATED";
-
 export type ChatMessageRole = "USER" | "SYSTEM";
 
 export type NoteSourceType = "WEB" | "TELEGRAM";
@@ -83,6 +81,24 @@ export interface StreamResponseDto {
    * @example "2026-04-29T10:00:00.000Z"
    */
   updatedAt: string;
+}
+
+export interface FindSimilarStreamsDto {
+  /**
+   * Text used to find the closest streams by name
+   * @minLength 1
+   * @maxLength 500
+   * @example "work projects"
+   */
+  query: string;
+  /**
+   * Maximum number of similar streams to return
+   * @min 2
+   * @max 100
+   * @default 5
+   * @example 5
+   */
+  limit?: object;
 }
 
 export interface CreateStreamDto {
@@ -190,6 +206,14 @@ export interface FindSimilarNotesDto {
    * @example "meeting notes about project deadlines"
    */
   query: string;
+  /**
+   * Maximum number of similar notes to return
+   * @min 2
+   * @max 100
+   * @default 5
+   * @example 5
+   */
+  limit?: object;
 }
 
 export interface CreateNoteDto {
@@ -246,6 +270,41 @@ export interface ChatResponseDto {
   updatedAt: string;
 }
 
+export interface ChatMessageResultNoteResponseDto {
+  /**
+   * @format uuid
+   * @example "8e2d5c9a-2b19-4d2f-9a4e-7d1c2f6a9b10"
+   */
+  id: string;
+  /**
+   * markdown-stripped preview text of the created note
+   * @example "Need to follow up with Alex tomorrow"
+   */
+  previewText: string;
+  /**
+   * names of all streams linked to the created note
+   * @example ["work"]
+   */
+  streamNames: string[];
+}
+
+export interface ChatMessageStreamResponseDto {
+  /**
+   * @format uuid
+   * @example "1a6b43f3-d064-4e83-a9ec-fba73453a49c"
+   */
+  id: string;
+  /** @example "work" */
+  name: string;
+}
+
+export interface ChatMessageResultResponseDto {
+  /** note created from this message */
+  note: ChatMessageResultNoteResponseDto | null;
+  /** streams newly created while processing this message */
+  streams: ChatMessageStreamResponseDto[];
+}
+
 export interface ChatMessageResponseDto {
   /**
    * @format uuid
@@ -259,9 +318,8 @@ export interface ChatMessageResponseDto {
   chatId: string;
   /** @example "USER" */
   role: ChatMessageRole;
-  /** @example "USER_INPUT" */
-  kind: ChatMessageKind;
   /**
+   * original user message markdown
    * @example ":work
    * Need to follow up with Alex tomorrow"
    */
@@ -271,21 +329,13 @@ export interface ChatMessageResponseDto {
    * @example null
    */
   replyToMessageId?: object | null;
-  /**
-   * @format uuid
-   * @example "8e2d5c9a-2b19-4d2f-9a4e-7d1c2f6a9b10"
-   */
-  resultNoteId?: object | null;
+  /** message processing result */
+  result: ChatMessageResultResponseDto | null;
   /**
    * @format date-time
    * @example "2026-05-03T10:00:00.000Z"
    */
   createdAt: string;
-}
-
-export interface SendChatMessageResponseDto {
-  userMessage: ChatMessageResponseDto;
-  systemMessage: ChatMessageResponseDto;
 }
 
 export interface CreateChatDto {
@@ -299,7 +349,7 @@ export interface CreateChatDto {
 
 export interface CreateChatMessageDto {
   /**
-   * full user message markdown, including optional stream lines
+   * Full user message markdown. Non-blank leading and trailing lines that start with ":" are parsed as stream names and excluded from the created note body.
    * @minLength 1
    * @maxLength 32768
    * @example ":work
@@ -339,6 +389,24 @@ export interface StreamControllerFindAllData {
     nextCursor: string | null;
   };
 }
+
+export interface StreamControllerFindSimilarParams {
+  /**
+   * Text used to find the closest streams by name.
+   * @minLength 1
+   * @maxLength 500
+   */
+  query: string;
+  /**
+   * Maximum number of similar streams to return.
+   * @min 2
+   * @max 100
+   * @default 5
+   */
+  limit?: number;
+}
+
+export type StreamControllerFindSimilarData = StreamResponseDto[];
 
 export interface StreamControllerFindOneParams {
   /**
@@ -468,6 +536,13 @@ export interface NoteControllerFindSimilarParams {
    * @maxLength 500
    */
   query: string;
+  /**
+   * Maximum number of similar notes to return.
+   * @min 2
+   * @max 100
+   * @default 5
+   */
+  limit?: number;
 }
 
 export type NoteControllerFindSimilarData = NoteWithStreamsResponseDto[];
@@ -564,4 +639,4 @@ export interface ChatControllerCreateMessageParams {
   chatId: string;
 }
 
-export type ChatControllerCreateMessageData = SendChatMessageResponseDto;
+export type ChatControllerCreateMessageData = ChatMessageResponseDto;

@@ -23,6 +23,8 @@ import {
   StreamControllerFindAllParams,
   StreamControllerFindOneData,
   StreamControllerFindOneParams,
+  StreamControllerFindSimilarData,
+  StreamControllerFindSimilarParams,
   StreamControllerRemoveData,
   StreamControllerRemoveParams,
   StreamControllerUpdateData,
@@ -82,6 +84,30 @@ export class Stream<SecurityDataType = unknown> {
   ) =>
     this.http.request<StreamControllerFindAllData, void>({
       path: `/api/stream`,
+      method: "GET",
+      query: query,
+      secure: true,
+      format: "json",
+      ...params,
+    });
+  /**
+   * @description Returns authorized user streams ranked by name similarity to the query string. Ranking combines multilingual PostgreSQL full-text search and trigram word similarity.
+   *
+   * @tags stream
+   * @name StreamControllerFindSimilar
+   * @summary find similar streams
+   * @request GET:/api/stream/similar
+   * @secure
+   * @response `200` `StreamControllerFindSimilarData` Closest authorized user streams
+   * @response `400` `void` Validation errors
+   * @response `401` `void` User is not authorized
+   */
+  streamControllerFindSimilar = (
+    query: StreamControllerFindSimilarParams,
+    params: RequestParams = {},
+  ) =>
+    this.http.request<StreamControllerFindSimilarData, void>({
+      path: `/api/stream/similar`,
       method: "GET",
       query: query,
       secure: true,

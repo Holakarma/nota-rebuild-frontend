@@ -1,3 +1,4 @@
+import { routeConfig } from '@shared/model/route.config';
 import {
 	createRoute,
 	lazyRouteComponent,
@@ -9,6 +10,6 @@ export const createProfileRoute = <TParentRoute extends AnyRoute>(
 ) =>
 	createRoute({
 		getParentRoute: () => parentRoute,
-		path: '/profile',
+		path: routeConfig.profile,
 		component: lazyRouteComponent(() => import('./profile.page')),
 	});

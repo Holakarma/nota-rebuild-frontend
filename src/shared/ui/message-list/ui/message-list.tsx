@@ -1,6 +1,7 @@
 import {
 	type ComponentPropsWithoutRef,
 	type ReactNode,
+	memo,
 	useRef,
 	useCallback,
 } from 'react';
@@ -34,9 +35,7 @@ export type MessageListProps<TMessage extends MessageListMessage> = Omit<
 export type MessageListType<TMessage extends MessageListMessage> =
 	MessageListProps<TMessage>;
 
-let count = 0;
-
-function MessageList<TMessage extends MessageListMessage>({
+function MessageListComponent<TMessage extends MessageListMessage>({
 	messages,
 	hasNextPage,
 	isFetchingNextPage,
@@ -44,24 +43,33 @@ function MessageList<TMessage extends MessageListMessage>({
 	itemHeight,
 	item,
 	loader,
-	style,
-	...props
 }: MessageListProps<TMessage>) {
-	console.log(count++);
 	const parentRef = useRef<HTMLDivElement | null>(null);
 	const topRef = useRef<HTMLDivElement | null>(null);
 
 	const containerHeight = useResizeObserver(parentRef);
 
-	const virtualizer = useVirtualizer<HTMLDivElement, HTMLDivElement>({
-		count: hasNextPage ? messages.length + 1 : messages.length,
-		getScrollElement: () => parentRef.current,
-		estimateSize: () => itemHeight,
-		getItemKey: (index) => {
+	const itemCount = hasNextPage ? messages.length + 1 : messages.length;
+
+	const getScrollElement = useCallback(() => parentRef.current, []);
+
+	const estimateSize = useCallback(() => itemHeight, [itemHeight]);
+
+	const getItemKey = useCallback(
+		(index: number) => {
 			if (hasNextPage && index === 0) return 'loader';
+
 			const messageIndex = hasNextPage ? index - 1 : index;
 			return messages[messageIndex]?.id ?? `row-${index}`;
 		},
+		[hasNextPage, messages],
+	);
+
+	const virtualizer = useVirtualizer<HTMLDivElement, HTMLDivElement>({
+		count: itemCount,
+		getScrollElement,
+		estimateSize,
+		getItemKey,
 	});
 
 	const items = virtualizer.getVirtualItems();
@@ -72,7 +80,7 @@ function MessageList<TMessage extends MessageListMessage>({
 		if (hasNextPage && !isFetchingNextPage) {
 			void fetchNextPage();
 		}
-	}, [hasNextPage, isFetchingNextPage]);
+	}, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
 	useIntersectionObserver({
 		rootRef: parentRef,
@@ -94,9 +102,7 @@ function MessageList<TMessage extends MessageListMessage>({
 				height: '100%',
 				overflow: 'auto',
 				contain: 'strict',
-				...style,
 			}}
-			{...props}
 		>
 			{pad > 0 && <div style={{ height: pad }} />}
 
@@ -134,5 +140,7 @@ function MessageList<TMessage extends MessageListMessage>({
 		</div>
 	);
 }
+
+const MessageList = memo(MessageListComponent) as typeof MessageListComponent;
 
 export default MessageList;

@@ -1,21 +1,33 @@
-import { forwardRef, useEffect, useRef, useState } from 'react';
+import { forwardRef, useEffect, useRef } from 'react';
 import { Box, IconButton, InputAdornment, TextField } from '@mui/material';
 import { useCreateChatMessageMutation } from '@entities/chat';
 import { SendIcon } from '@shared/icons/send';
+import { useMessageDraftStore } from '../model/stream-message-draft';
 
 type StreamMessageInputProps = {
 	disabled?: boolean;
 	autoFocus?: boolean;
-	chatId: string;
+	chatId?: string;
+	streamId?: string;
 	onFocus?: () => void;
 };
 
-export const StreamMessageInput = forwardRef<
-	HTMLInputElement,
+export const MessageInput = forwardRef<
+	HTMLInputElement | HTMLTextAreaElement,
 	StreamMessageInputProps
 >(({ disabled = false, autoFocus = false, onFocus, chatId }, ref) => {
-	const [bodyMarkdown, setBodyMarkdown] = useState('');
-	const inputRef = useRef<HTMLInputElement | null>(null);
+	const bodyMarkdown = useMessageDraftStore(
+		(state) => state.bodyMarkdown,
+	);
+	const setBodyMarkdown = useMessageDraftStore(
+		(state) => state.setBodyMarkdown,
+	);
+	const clearBodyMarkdown = useMessageDraftStore(
+		(state) => state.clearBodyMarkdown,
+	);
+	const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(
+		null,
+	);
 	const createChatMessageMutation = useCreateChatMessageMutation();
 
 	const isPending = createChatMessageMutation.isPending;
@@ -27,7 +39,9 @@ export const StreamMessageInput = forwardRef<
 		}
 	}, [autoFocus, isDisabled]);
 
-	const setInputRef = (element: HTMLInputElement | null) => {
+	const setInputRef = (
+		element: HTMLInputElement | HTMLTextAreaElement | null,
+	) => {
 		inputRef.current = element;
 
 		if (typeof ref === 'function') {
@@ -37,12 +51,10 @@ export const StreamMessageInput = forwardRef<
 		}
 	};
 
-	const sendMessage = async (event: React.SubmitEvent<HTMLFormElement>) => {
-		event.preventDefault();
-
+	const submitMessage = async () => {
 		const message = bodyMarkdown.trim();
 
-		if (!message || isDisabled) {
+		if (!message || isDisabled || !chatId) {
 			return;
 		}
 
@@ -53,8 +65,24 @@ export const StreamMessageInput = forwardRef<
 			},
 		});
 
-		setBodyMarkdown('');
+		clearBodyMarkdown();
 	};
+
+	const sendMessage = async (event: React.SubmitEvent<HTMLFormElement>) => {
+		event.preventDefault();
+		await submitMessage();
+	};
+
+	const handleKeyDown = (event: React.KeyboardEvent) => {
+		if (event.key !== 'Enter' || event.shiftKey) {
+			return;
+		}
+
+		event.preventDefault();
+		void submitMessage();
+	};
+
+	const isSubmitDisabled = isDisabled || !chatId || !bodyMarkdown.trim();
 
 	return (
 		<Box
@@ -66,9 +94,13 @@ export const StreamMessageInput = forwardRef<
 				aria-label="Сообщение"
 				onChange={(event) => setBodyMarkdown(event.target.value)}
 				onFocus={onFocus}
+				onKeyDown={handleKeyDown}
 				inputRef={setInputRef}
 				value={bodyMarkdown}
 				disabled={isDisabled}
+				multiline
+				minRows={1}
+				maxRows={6}
 				fullWidth
 				slotProps={{
 					htmlInput: {
@@ -80,9 +112,7 @@ export const StreamMessageInput = forwardRef<
 								<IconButton
 									type="submit"
 									aria-label="Отправить"
-									disabled={
-										isDisabled || !bodyMarkdown.trim()
-									}
+									disabled={isSubmitDisabled}
 								>
 									<SendIcon />
 								</IconButton>
@@ -95,4 +125,4 @@ export const StreamMessageInput = forwardRef<
 	);
 });
 
-StreamMessageInput.displayName = 'StreamMessageInput';
+MessageInput.displayName = 'MessageInput';

@@ -1,5 +1,6 @@
 import { RouterProvider } from '@tanstack/react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { SnackbarProvider } from '@shared/ui/snackbar';
 
 import { router } from './providers/router/router';
 import { AppThemeProvider } from './providers/theme';
@@ -20,7 +21,9 @@ function App() {
 	return (
 		<QueryClientProvider client={queryClient}>
 			<AppThemeProvider>
-				<RouterProvider router={router} />
+				<SnackbarProvider>
+					<RouterProvider router={router} />
+				</SnackbarProvider>
 			</AppThemeProvider>
 		</QueryClientProvider>
 	);

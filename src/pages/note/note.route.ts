@@ -1,3 +1,4 @@
+import { routeConfig } from '@shared/model/route.config';
 import {
 	createRoute,
 	lazyRouteComponent,
@@ -9,6 +10,6 @@ export const createNoteRoute = <TParentRoute extends AnyRoute>(
 ) =>
 	createRoute({
 		getParentRoute: () => parentRoute,
-		path: '/note/{-$noteId}',
+		path: routeConfig.note,
 		component: lazyRouteComponent(() => import('./note.page')),
 	});

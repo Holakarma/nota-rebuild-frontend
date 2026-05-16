@@ -128,7 +128,7 @@ export class Chat<SecurityDataType = unknown> {
       ...params,
     });
   /**
-   * @description Creates a USER_INPUT message, one note from cleaned text, and a NOTE_CREATED system message in a single transaction.
+   * @description Creates one user message with the original bodyMarkdown, parses leading and trailing lines that start with ":" as stream names, creates one note from the remaining markdown, links the note with the chat stream and parsed streams, and stores only newly created streams in the message result.
    *
    * @tags chat
    * @name ChatControllerCreateMessage
@@ -136,7 +136,7 @@ export class Chat<SecurityDataType = unknown> {
    * @request POST:/api/chat/{chatId}/messages
    * @secure
    * @response `201` `ChatControllerCreateMessageData` Chat message was processed
-   * @response `400` `void` Validation errors or empty note body after stream lines
+   * @response `400` `void` Validation errors or empty note body after stream service lines
    * @response `401` `void` User is not authorized
    * @response `404` `void` Chat not found
    */

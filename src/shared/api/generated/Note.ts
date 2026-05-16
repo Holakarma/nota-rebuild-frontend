@@ -82,7 +82,7 @@ export class Note<SecurityDataType = unknown> {
       ...params,
     });
   /**
-   * @description Returns up to 5 authorized user note cards ranked by content similarity to the query string. Ranking combines multilingual PostgreSQL full-text search and trigram word similarity.
+   * @description Returns authorized user note cards ranked by content similarity to the query string. Ranking combines multilingual PostgreSQL full-text search and trigram word similarity.
    *
    * @tags note
    * @name NoteControllerFindSimilar

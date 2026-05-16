@@ -1,9 +1,9 @@
 import { chatQueries } from '@entities/chat';
-import { Alert, CircularProgress, Stack } from '@mui/material';
+import { Alert, CircularProgress, Stack, Typography } from '@mui/material';
 import type { ChatMessageResponseDto } from '@shared/api';
-import { MessageList } from '@shared/ui/message-list';
+import { MessageList, type ItemProps } from '@shared/ui/message-list';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { MessageItem } from './message.item';
 
 type MessagesProps = {
@@ -19,6 +19,28 @@ export const Messages = ({ chatId }: MessagesProps) => {
 		}
 		return query.data.pages.flatMap((page) => page.result).reverse();
 	}, [query.data]);
+
+	const renderMessage = useCallback(
+		({ message }: ItemProps<ChatMessageResponseDto>) => (
+			<MessageItem message={message} />
+		),
+		[],
+	);
+
+	const renderLoader = useCallback(
+		() => (
+			<Stack
+				sx={{
+					alignItems: 'center',
+					justifyContent: 'center',
+					paddingBlock: 2,
+				}}
+			>
+				<CircularProgress color="secondary" />
+			</Stack>
+		),
+		[],
+	);
 
 	if (query.isPending) {
 		return (
@@ -46,7 +68,26 @@ export const Messages = ({ chatId }: MessagesProps) => {
 					alignItems: 'center',
 				}}
 			>
-				<Alert>Ошибка загрузки сообщений</Alert>
+				<Alert severity="error">Ошибка загрузки сообщений</Alert>
+			</Stack>
+		);
+	}
+
+	if (!messages.length) {
+		return (
+			<Stack
+				sx={{
+					height: '100%',
+					justifyContent: 'center',
+					alignItems: 'center',
+				}}
+			>
+				<Typography
+					variant="L16"
+					color="textSecondary"
+				>
+					Сообщений пока нет
+				</Typography>
 			</Stack>
 		);
 	}
@@ -57,19 +98,9 @@ export const Messages = ({ chatId }: MessagesProps) => {
 			hasNextPage={query.hasNextPage}
 			isFetchingNextPage={query.isFetchingNextPage}
 			fetchNextPage={query.fetchNextPage}
-			itemHeight={35 + 8}
-			item={({ message }) => <MessageItem message={message} />}
-			loader={() => (
-				<Stack
-					sx={{
-						alignItems: 'center',
-						justifyContent: 'center',
-						paddingBlock: 2,
-					}}
-				>
-					<CircularProgress color="secondary" />
-				</Stack>
-			)}
+			itemHeight={234}
+			item={renderMessage}
+			loader={renderLoader}
 		/>
 	);
 };

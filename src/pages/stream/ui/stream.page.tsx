@@ -1,8 +1,9 @@
-import { StreamMessageInput } from '@features/stream-message';
-import { Box } from '@mui/material';
-import { useNavigate, useParams } from '@tanstack/react-router';
+import { MessageInput } from '@features/stream-message';
+import { Box, Stack } from '@mui/material';
+import { useParams } from '@tanstack/react-router';
 import { StreamSidebar } from '@widgets/stream-sidebar';
 import { NoteGrid } from './note-grid';
+import { StreamHeader } from '@widgets/stream-header';
 
 const UUID_PATTERN =
 	/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -10,25 +11,11 @@ const UUID_PATTERN =
 const isUuid = (value?: string) => Boolean(value && UUID_PATTERN.test(value));
 
 const StreamPage = () => {
-	const navigate = useNavigate();
 	const params = useParams({ strict: false });
 	const rawStreamId =
 		typeof params.streamId === 'string' ? params.streamId : undefined;
 	const selectedStreamId = isUuid(rawStreamId) ? rawStreamId : undefined;
 	const hasInvalidStreamId = Boolean(rawStreamId && !selectedStreamId);
-
-	const openChat = () => {
-		if (hasInvalidStreamId) {
-			return;
-		}
-
-		void navigate({
-			to: '/chat/{-$streamId}',
-			params: {
-				streamId: selectedStreamId ?? '',
-			},
-		});
-	};
 
 	return (
 		<Box
@@ -48,34 +35,23 @@ const StreamPage = () => {
 		>
 			<StreamSidebar selectedStreamId={selectedStreamId} />
 
-			<Box
+			<Stack
 				component="main"
-				sx={{
-					minWidth: 0,
-					minHeight: 0,
-					display: 'grid',
-					gridTemplateRows: 'minmax(0, 1fr) auto',
-					rowGap: 1.5,
-					pt: 1.375,
-					pr: 1.5,
-					pb: 1.5,
-					pl: {
-						xs: 1.5,
-						md: 1.375,
-					},
-				}}
+				spacing={1}
+				sx={{ p: 1 }}
 			>
+				<StreamHeader streamId={selectedStreamId} />
+
 				<NoteGrid
 					selectedStreamId={selectedStreamId}
 					hasInvalidStreamId={hasInvalidStreamId}
 				/>
 
-				<StreamMessageInput
+				<MessageInput
 					streamId={selectedStreamId}
 					disabled={hasInvalidStreamId}
-					onFocus={openChat}
 				/>
-			</Box>
+			</Stack>
 		</Box>
 	);
 };

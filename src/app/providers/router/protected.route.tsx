@@ -5,10 +5,11 @@ import {
 	type AnyRoute,
 	type AnyRootRoute,
 } from '@tanstack/react-router';
-import { ProtectedLayout } from '@app/layout/app-layout';
+import { Layout } from '@app/layout/app-layout';
 import { refreshAccessToken } from '@shared/api/auth-session';
 import { getAccessToken } from '@shared/auth';
 import { Stack, Typography } from '@mui/material';
+import { routeConfig } from '@shared/model/route.config';
 
 export const createProtectedRoute = <TRootRoute extends AnyRootRoute>(
 	rootRoute: TRootRoute,
@@ -16,7 +17,7 @@ export const createProtectedRoute = <TRootRoute extends AnyRootRoute>(
 	createRoute({
 		getParentRoute: () => rootRoute,
 		id: 'protected',
-		component: ProtectedLayout,
+		component: Layout,
 		beforeLoad: async () => {
 			if (getAccessToken()) {
 				return;
@@ -43,7 +44,7 @@ export const createPublicOnlyRoute = <TRootRoute extends AnyRootRoute>(
 		beforeLoad: async () => {
 			if (getAccessToken()) {
 				throw redirect({
-					to: '/stream/{-$streamId}',
+					to: routeConfig.chat,
 					params: {},
 					replace: true,
 				});
@@ -56,7 +57,7 @@ export const createPublicOnlyRoute = <TRootRoute extends AnyRootRoute>(
 			}
 
 			throw redirect({
-				to: '/stream/{-$streamId}',
+				to: routeConfig.chat,
 				params: {},
 				replace: true,
 			});

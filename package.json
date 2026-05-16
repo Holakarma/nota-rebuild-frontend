@@ -24,7 +24,8 @@
 		"react-hook-form": "^7.75.0",
 		"stream-chat": "^9.43.2",
 		"stream-chat-react": "^14.0.0-beta.8",
-		"zod": "^4.4.3"
+		"zod": "^4.4.3",
+		"zustand": "^5.0.13"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",

@@ -1,38 +1,25 @@
-import { useState, useLayoutEffect } from "react";
+import { useLayoutEffect, useState } from 'react';
 
-export type ResizeObserverProps = React.RefObject<HTMLDivElement | null>
+export type ResizeObserverProps = React.RefObject<HTMLDivElement | null>;
 
 export const useResizeObserver = (ref: ResizeObserverProps) => {
-    const [containerHeight, setContainerHeight] = useState(0);
+	const [containerHeight, setContainerHeight] = useState(0);
 
-    useLayoutEffect(() => {
-        const element = ref.current;
-        if (!element) {
-            return undefined;
-        }
+	useLayoutEffect(() => {
+		const element = ref.current;
+		if (!element) {
+			return undefined;
+		}
 
-        const updateHeight = () => {
-            setContainerHeight(element.clientHeight);
-        };
+		const updateHeight = () => {
+			setContainerHeight(element.clientHeight);
+		};
 
-        updateHeight();
+		const observer = new ResizeObserver(updateHeight);
+		observer.observe(element);
 
-        if (typeof ResizeObserver === 'undefined') {
-            if (typeof window === 'undefined') {
-                return undefined;
-            }
+		return () => observer.disconnect();
+	}, [ref]);
 
-            window.addEventListener('resize', updateHeight);
-            return () => {
-                window.removeEventListener('resize', updateHeight);
-            };
-        }
-
-        const observer = new ResizeObserver(updateHeight);
-        observer.observe(element);
-
-        return () => observer.disconnect();
-    }, [ref.current]);
-
-    return containerHeight
-}
+	return containerHeight;
+};

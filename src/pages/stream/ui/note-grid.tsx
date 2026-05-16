@@ -1,6 +1,7 @@
 import { NoteCard, noteQueries } from '@entities/note';
 import { streamQueries } from '@entities/stream';
 import { Alert, Box, CircularProgress, Grid, Stack } from '@mui/material';
+import { routeConfig } from '@shared/model/route.config';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 
@@ -37,7 +38,7 @@ export const NoteGrid = ({
 			<Stack
 				sx={{
 					width: '100%',
-					height: '100%',
+					flexGrow: 1,
 					justifyContent: 'center',
 					alignItems: 'center',
 				}}
@@ -51,7 +52,7 @@ export const NoteGrid = ({
 			<Stack
 				sx={{
 					width: '100%',
-					height: '100%',
+					flexGrow: 1,
 					justifyContent: 'center',
 					alignItems: 'center',
 				}}
@@ -64,6 +65,7 @@ export const NoteGrid = ({
 	return (
 		<Box
 			sx={{
+				flexGrow: 1,
 				minHeight: 0,
 				overflowY: 'auto',
 				overflowX: 'hidden',
@@ -82,7 +84,7 @@ export const NoteGrid = ({
 							size={4}
 						>
 							<Link
-								to="/note/{-$noteId}"
+								to={routeConfig.note}
 								params={{ noteId: note.id }}
 								style={{
 									color: 'inherit',

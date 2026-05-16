@@ -1,20 +1,32 @@
-import { NoteCard, NoteCardSkeleton, noteQueries } from '@entities/note';
+import { NoteCard } from '@entities/note';
+import { StreamCard } from '@entities/stream';
 import { Box, Stack, Typography } from '@mui/material';
 import { grey } from '@mui/material/colors';
-import { ChatMessageResponseDto } from '@shared/api';
-import { useQuery } from '@tanstack/react-query';
+import {
+	ChatMessageResponseDto,
+	ChatMessageResultNoteResponseDto,
+	ChatMessageStreamResponseDto,
+} from '@shared/api';
+import { memo } from 'react';
 
 type MessageItemProps = {
 	message: ChatMessageResponseDto;
 };
 
-export const MessageItem = ({ message }: MessageItemProps) => {
-	if (message.role === 'USER') return <UserMessage message={message} />;
+const MessageItemComponent = ({ message }: MessageItemProps) => {
+	return (
+		<Stack
+			spacing={1}
+			sx={{ paddingBottom: 1 }}
+		>
+			<UserMessage message={message} />
 
-	return <SystemMessage message={message} />;
+			<SystemMessage message={message} />
+		</Stack>
+	);
 };
 
-const UserMessage = ({ message }: MessageItemProps) => {
+const UserMessage = memo(({ message }: MessageItemProps) => {
 	return (
 		<Stack
 			sx={{
@@ -31,18 +43,37 @@ const UserMessage = ({ message }: MessageItemProps) => {
 					minWidth: 200,
 				}}
 			>
-				<Typography variant="R20">{message.bodyMarkdown}</Typography>
+				<Typography
+					variant="R20"
+					sx={{
+						whiteSpace: 'pre-wrap',
+						wordBreak: 'break-word',
+					}}
+				>
+					{message.bodyMarkdown}
+				</Typography>
 			</Box>
 		</Stack>
 	);
-};
+});
 
-const SystemMessage = ({ message }: MessageItemProps) => {
-	const noteQuery =
-		message.resultNoteId &&
-		useQuery(noteQueries.detail({ id: String(message.resultNoteId) }));
+const SystemMessage = memo(({ message }: MessageItemProps) => {
+	if (!message.result) return null;
 
-	if (!noteQuery)
+	const result = message.result;
+
+	return (
+		<Stack spacing={1}>
+			{result.note && <SystemMessageNote note={result.note} />}
+			{!!result.streams.length && (
+				<SystemMessageStream streams={result.streams} />
+			)}
+		</Stack>
+	);
+});
+
+const SystemMessageNote = memo(
+	({ note }: { note: ChatMessageResultNoteResponseDto }) => {
 		return (
 			<Stack
 				sx={{ maxWidth: 400 }}
@@ -52,31 +83,57 @@ const SystemMessage = ({ message }: MessageItemProps) => {
 					variant="L20"
 					sx={{ fontStyle: 'italic' }}
 				>
-					{message.bodyMarkdown}
+					Заметка создана
 				</Typography>
+
+				<NoteCard
+					text={note.previewText}
+					tags={note.streamNames.join(', ')}
+					id={note.id}
+				/>
 			</Stack>
 		);
+	},
+);
 
-	return (
-		<Stack
-			sx={{ maxWidth: 400 }}
-			spacing={1}
-		>
-			<Typography
-				variant="L20"
-				sx={{ fontStyle: 'italic' }}
+const SystemMessageStream = memo(
+	({ streams }: { streams: ChatMessageStreamResponseDto[] }) => {
+		return (
+			<Stack
+				spacing={1}
+				sx={{ maxWidth: '100%', minWidth: 0 }}
 			>
-				{message.bodyMarkdown}
-			</Typography>
+				<Typography
+					variant="L20"
+					sx={{ fontStyle: 'italic' }}
+				>
+					{streams.length === 1 ? 'Поток создан' : 'Потоки созданы'}
+				</Typography>
 
-			{noteQuery.isPending || noteQuery.isError ? (
-				<NoteCardSkeleton />
-			) : (
-				<NoteCard
-					text={noteQuery.data.previewText}
-					tags={noteQuery.data.streams?.[0]?.name}
-				/>
-			)}
-		</Stack>
-	);
-};
+				<Stack
+					direction="row"
+					spacing={1}
+					sx={{
+						maxWidth: '100%',
+						overflowX: 'auto',
+						overflowY: 'hidden',
+						pb: 1,
+						'& > *': {
+							flex: '0 0 240px',
+						},
+					}}
+				>
+					{streams.map((stream) => (
+						<StreamCard
+							key={stream.id}
+							id={stream.id}
+							text={stream.name}
+						/>
+					))}
+				</Stack>
+			</Stack>
+		);
+	},
+);
+
+export const MessageItem = memo(MessageItemComponent);

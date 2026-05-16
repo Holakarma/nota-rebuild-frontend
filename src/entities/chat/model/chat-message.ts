@@ -1,9 +1,7 @@
 import type { ChatMessageResponseDto } from '@shared/api';
 
 export const getChatMessageNoteId = (message: ChatMessageResponseDto) => {
-	const resultNoteId: unknown = message.resultNoteId;
-
-	return typeof resultNoteId === 'string' ? resultNoteId : undefined;
+	return message.result?.note?.id;
 };
 
 export const getChatMessageDateKey = (date: string) =>

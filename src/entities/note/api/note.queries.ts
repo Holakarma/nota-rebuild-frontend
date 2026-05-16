@@ -95,5 +95,6 @@ export const noteQueries = {
 		queryOptions({
 			queryKey: noteQueryKeys.detail(query.id),
 			queryFn: ({ signal }) => getNote(query, signal),
+			staleTime: 2 * 60_000
 		}),
 };

@@ -1,6 +1,7 @@
-import { Alert, Box, Card, CardContent, Snackbar } from '@mui/material';
+import { Box, Card, CardContent } from '@mui/material';
 import { Logo } from '@shared/ui/logo';
-import type { ReactNode } from 'react';
+import { useSnackbar } from '@shared/ui/snackbar';
+import { useEffect, type ReactNode } from 'react';
 
 type AuthFormProps = {
 	children: ReactNode;
@@ -15,39 +16,38 @@ export const AuthFormWidget = ({
 	onCloseSnackbar,
 	snackbarMessage,
 }: AuthFormProps) => {
-	return (
-		<>
-			<Card
-				sx={{
-					width: 555,
-				}}
-			>
-				<CardContent sx={{ p: 2 }}>
-					<Box sx={{ display: 'flex', justifyContent: 'center' }}>
-						<Logo />
-					</Box>
+	const { showError } = useSnackbar();
 
-					<Box
-						sx={{
-							display: 'flex',
-							flexDirection: 'column',
-							gap: 2,
-						}}
-					>
-						{children}
-					</Box>
-				</CardContent>
-			</Card>
-			{openSnackbar !== undefined && (
-				<Snackbar
-					open={openSnackbar}
-					autoHideDuration={5000}
-					onClose={onCloseSnackbar}
-					anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+	useEffect(() => {
+		if (!openSnackbar || !snackbarMessage) {
+			return;
+		}
+
+		showError(snackbarMessage);
+		onCloseSnackbar?.();
+	}, [openSnackbar, snackbarMessage, onCloseSnackbar, showError]);
+
+	return (
+		<Card
+			sx={{
+				width: 555,
+			}}
+		>
+			<CardContent sx={{ p: 2 }}>
+				<Box sx={{ display: 'flex', justifyContent: 'center' }}>
+					<Logo />
+				</Box>
+
+				<Box
+					sx={{
+						display: 'flex',
+						flexDirection: 'column',
+						gap: 2,
+					}}
 				>
-					<Alert severity="error">{snackbarMessage}</Alert>
-				</Snackbar>
-			)}
-		</>
+					{children}
+				</Box>
+			</CardContent>
+		</Card>
 	);
 };

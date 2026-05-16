@@ -1,3 +1,4 @@
+import { routeConfig } from '@shared/model/route.config';
 import {
 	createRoute,
 	lazyRouteComponent,
@@ -9,6 +10,6 @@ export const createChatRoute = <TParentRoute extends AnyRoute>(
 ) =>
 	createRoute({
 		getParentRoute: () => parentRoute,
-		path: '/chat/{-$streamId}',
+		path: routeConfig.chat,
 		component: lazyRouteComponent(() => import('./ui/chat.page')),
 	});

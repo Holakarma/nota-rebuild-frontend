@@ -1,35 +1,41 @@
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect, useRef } from 'react';
 
-export type useIntersectionObserverProps = {
-    rootRef: React.RefObject<Element | null>,
-    observeRef: React.RefObject<Element | null>,
-    onIntersect: () => void;
-}
+export type UseIntersectionObserverProps = {
+	rootRef: React.RefObject<Element | null>;
+	observeRef: React.RefObject<Element | null>;
+	onIntersect: () => void;
+};
 
-export const useIntersectionObserver = ({ rootRef, observeRef, onIntersect }: useIntersectionObserverProps) => {
-    useEffect(() => {
-        const root = rootRef.current;
-        if (!root) {
-            return undefined;
-        }
+export const useIntersectionObserver = ({
+	rootRef,
+	observeRef,
+	onIntersect,
+}: UseIntersectionObserverProps) => {
+	const onIntersectRef = useRef(onIntersect);
 
-        const observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    if (
-                        entry.isIntersecting
-                    ) {
-                        void onIntersect();
-                    }
-                });
-            },
-            { root },
-        );
+	useLayoutEffect(() => {
+		onIntersectRef.current = onIntersect;
+	}, [onIntersect]);
 
-        if (observeRef.current) {
-            observer.observe(observeRef.current);
-        }
+	useEffect(() => {
+		const root = rootRef.current;
+		const target = observeRef.current;
 
-        return () => observer.disconnect();
-    }, []);
-}
+		if (!root || !target || typeof IntersectionObserver === 'undefined') {
+			return undefined;
+		}
+
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (entries.some((entry) => entry.isIntersecting)) {
+					void onIntersectRef.current();
+				}
+			},
+			{ root },
+		);
+
+		observer.observe(target);
+
+		return () => observer.disconnect();
+	}, [observeRef, rootRef]);
+};

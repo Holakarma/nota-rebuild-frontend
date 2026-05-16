@@ -1,4 +1,7 @@
-import { StreamMessageInput } from '@features/stream-message';
+import {
+	MessageInput,
+	useMessageDraftStore,
+} from '@features/stream-message';
 import { Box, CircularProgress, Stack } from '@mui/material';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { StreamSidebar } from '@widgets/stream-sidebar';
@@ -7,10 +10,16 @@ import { ChatInvalidStream } from './chat-invalid-stream';
 import { useQuery } from '@tanstack/react-query';
 import { chatQueries } from '@entities/chat';
 import { Messages } from './messages';
+import { routeConfig } from '@shared/model/route.config';
+import { StreamHeader } from '@widgets/stream-header';
+import { SearchResult } from '@features/search';
 
 const ChatPage = () => {
 	const navigate = useNavigate();
 	const params = useParams({ strict: false });
+	const messageDraft = useMessageDraftStore(
+		(state) => state.bodyMarkdown,
+	);
 
 	const rawStreamId =
 		typeof params.streamId === 'string' ? params.streamId : undefined;
@@ -21,7 +30,7 @@ const ChatPage = () => {
 
 	const goToStreams = () => {
 		void navigate({
-			to: '/stream/{-$streamId}',
+			to: routeConfig.stream,
 			params: { streamId: '' },
 		});
 	};
@@ -55,19 +64,19 @@ const ChatPage = () => {
 					height: '100%',
 					minHeight: 0,
 					overflow: 'hidden',
-					pt: 1.375,
-					pr: 1.5,
-					pb: 1.5,
-					pl: {
-						xs: 1.5,
-						md: 1.375,
-					},
+					p: 1,
 				}}
 			>
+				<StreamHeader
+					streamId={streamId}
+					chatMode={true}
+				/>
+
 				{!chatQuery.isPending ? (
 					<>
 						<Messages chatId={chatQuery.data.id} />
-						<StreamMessageInput
+						<SearchResult query={messageDraft} />
+						<MessageInput
 							chatId={chatQuery.data?.id}
 							autoFocus
 						/>

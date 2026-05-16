@@ -102,5 +102,5 @@ export const useMessageListAutoScroll = <
 				initialScrollFrameRef.current = null;
 			}
 		};
-	}, [messageCount, parentRef, virtualizer]);
+	}, [firstMessageId, hasNextPage, messageCount, parentRef, virtualizer]);
 };

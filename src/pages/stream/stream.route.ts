@@ -1,3 +1,4 @@
+import { routeConfig } from '@shared/model/route.config';
 import {
 	createRoute,
 	lazyRouteComponent,
@@ -9,6 +10,6 @@ export const createStreamRoute = <TParentRoute extends AnyRoute>(
 ) =>
 	createRoute({
 		getParentRoute: () => parentRoute,
-		path: '/stream/{-$streamId}',
+		path: routeConfig.stream,
 		component: lazyRouteComponent(() => import('./ui/stream.page')),
 	});
