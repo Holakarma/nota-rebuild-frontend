@@ -149,7 +149,10 @@ export const useCreateStreamMutation = (
 		mutationFn: createStream,
 		onSuccess: async (data, variables, onMutateResult, context) => {
 			queryClient.setQueryData(streamQueryKeys.detail(data.id), data);
-			await queryClient.invalidateQueries({ queryKey: streamQueryKeys.lists() });
+			await Promise.all([
+				queryClient.invalidateQueries({ queryKey: streamQueryKeys.lists() }),
+				queryClient.invalidateQueries({ queryKey: streamQueryKeys.similar() }),
+			]);
 			await options?.onSuccess?.(data, variables, onMutateResult, context);
 		},
 	});
@@ -174,6 +177,7 @@ export const useUpdateStreamMutation = (
 					queryKey: streamQueryKeys.notes(variables.id),
 				}),
 				queryClient.invalidateQueries({ queryKey: streamQueryKeys.lists() }),
+				queryClient.invalidateQueries({ queryKey: streamQueryKeys.similar() }),
 			]);
 			await options?.onSuccess?.(data, variables, onMutateResult, context);
 		},
@@ -196,7 +200,10 @@ export const useRemoveStreamMutation = (
 			queryClient.removeQueries({
 				queryKey: streamQueryKeys.notes(variables.id),
 			});
-			await queryClient.invalidateQueries({ queryKey: streamQueryKeys.lists() });
+			await Promise.all([
+				queryClient.invalidateQueries({ queryKey: streamQueryKeys.lists() }),
+				queryClient.invalidateQueries({ queryKey: streamQueryKeys.similar() }),
+			]);
 			await options?.onSuccess?.(data, variables, onMutateResult, context);
 		},
 	});

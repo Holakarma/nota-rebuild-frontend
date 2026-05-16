@@ -30,6 +30,7 @@ export const NoteFindAllParamsSchema = z.object({
 
 export const NoteFindSimilarParamsSchema = z.object({
 	query: z.string().min(1).max(500),
+	limit: z.number().int().min(2).max(100).optional(),
 }) satisfies z.ZodType<NoteControllerFindSimilarParams>;
 
 export const NoteFindOneParamsSchema =

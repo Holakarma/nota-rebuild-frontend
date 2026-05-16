@@ -1,4 +1,5 @@
 import { NoteCard } from '@entities/note';
+import { StreamCard } from '@entities/stream';
 import { Stack, Typography } from '@mui/material';
 import { useSnackbar } from '@shared/ui/snackbar';
 import { useEffect } from 'react';
@@ -18,21 +19,69 @@ const horizontalListSx = {
 	},
 };
 
-const SEARCH_ERROR_MESSAGE = 'Не удалось загрузить похожие заметки';
+const STREAM_SEARCH_PREFIX = ':';
+const NOTE_SEARCH_ERROR_MESSAGE = 'Не удалось загрузить похожие заметки';
+const STREAM_SEARCH_ERROR_MESSAGE = 'Не удалось загрузить похожие потоки';
 
 export const SearchResult = ({ query = '' }: SearchResultProps) => {
-	const similarQuery = useSearch({ query });
+	const { notesQuery, streamsQuery } = useSearch({ query });
 	const { showError } = useSnackbar();
+	const isStreamSearch = query.trim().startsWith(STREAM_SEARCH_PREFIX);
 
-	const notes = similarQuery.data;
+	const similarQuery = isStreamSearch ? streamsQuery : notesQuery;
+	const notes = notesQuery.data;
+	const streams = streamsQuery.data;
 
 	useEffect(() => {
 		if (similarQuery.isError) {
-			showError(SEARCH_ERROR_MESSAGE);
+			showError(
+				isStreamSearch ? STREAM_SEARCH_ERROR_MESSAGE : NOTE_SEARCH_ERROR_MESSAGE,
+			);
 		}
-	}, [similarQuery.errorUpdatedAt, similarQuery.isError, showError]);
+	}, [
+		isStreamSearch,
+		showError,
+		similarQuery.errorUpdatedAt,
+		similarQuery.isError,
+	]);
 
-	if (!query || similarQuery.isError || !notes?.length) {
+	if (!query || similarQuery.isError) {
+		return null;
+	}
+
+	if (isStreamSearch) {
+		if (!streams?.length) {
+			return null;
+		}
+
+		return (
+			<Stack
+				spacing={1}
+				sx={{
+					minWidth: 0,
+					maxWidth: '100%',
+				}}
+			>
+				<Typography variant="L16">Похожие потоки</Typography>
+
+				<Stack
+					direction="row"
+					spacing={1}
+					sx={horizontalListSx}
+				>
+					{streams.map((stream) => (
+						<StreamCard
+							key={stream.id}
+							id={stream.id}
+							text={stream.name}
+						/>
+					))}
+				</Stack>
+			</Stack>
+		);
+	}
+
+	if (!notes?.length) {
 		return null;
 	}
 

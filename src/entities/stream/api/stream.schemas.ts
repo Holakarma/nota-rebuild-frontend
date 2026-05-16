@@ -5,6 +5,7 @@ import type {
 	NoteStreamControllerFindNotesParams,
 	StreamControllerFindAllParams,
 	StreamControllerFindOneParams,
+	StreamControllerFindSimilarParams,
 	StreamControllerRemoveParams,
 	StreamControllerUpdateParams,
 	UpdateStreamDto,
@@ -34,6 +35,11 @@ export const StreamFindAllParamsSchema = z.object({
 	cursor: z.string().optional(),
 	limit: z.number().int().min(1).max(100).optional(),
 }) satisfies z.ZodType<StreamControllerFindAllParams>;
+
+export const StreamFindSimilarParamsSchema = z.object({
+	query: z.string().min(1).max(500),
+	limit: z.number().int().min(2).max(100).optional(),
+}) satisfies z.ZodType<StreamControllerFindSimilarParams>;
 
 export const StreamFindOneParamsSchema =
 	streamIdParamsSchema satisfies z.ZodType<StreamControllerFindOneParams>;

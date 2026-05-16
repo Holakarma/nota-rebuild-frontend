@@ -13,9 +13,12 @@ import {
 	type StreamControllerFindAllParams,
 	type StreamControllerFindOneData,
 	type StreamControllerFindOneParams,
+	type StreamControllerFindSimilarData,
+	type StreamControllerFindSimilarParams,
 } from '@shared/api';
 import {
 	StreamFindAllParamsSchema,
+	StreamFindSimilarParamsSchema,
 	StreamFindNotesParamsSchema,
 	StreamFindOneParamsSchema,
 } from './stream.schemas';
@@ -46,6 +49,9 @@ export const streamQueryKeys = {
 		[...streamQueryKeys.lists(), compactQueryParams(query)] as const,
 	infiniteList: (query: StreamListInfiniteParams = {}) =>
 		[...streamQueryKeys.lists(), 'infinite', compactQueryParams(query)] as const,
+	similar: () => [...streamQueryKeys.all(), 'similar'] as const,
+	similarList: (query: StreamControllerFindSimilarParams) =>
+		[...streamQueryKeys.similar(), compactQueryParams(query)] as const,
 	details: () => [...streamQueryKeys.all(), 'detail'] as const,
 	detail: (id: string) => [...streamQueryKeys.details(), id] as const,
 	notes: (streamId: string) => [...streamQueryKeys.detail(streamId), 'note'] as const,
@@ -69,6 +75,18 @@ export const getStreams = async (
 ): Promise<StreamControllerFindAllData> => {
 	const validQuery = StreamFindAllParamsSchema.parse(query);
 	const response = await api.stream.streamControllerFindAll(validQuery, {
+		signal,
+	});
+
+	return response.data;
+};
+
+export const getSimilarStreams = async (
+	query: StreamControllerFindSimilarParams,
+	signal?: AbortSignal,
+): Promise<StreamControllerFindSimilarData> => {
+	const validQuery = StreamFindSimilarParamsSchema.parse(query);
+	const response = await api.stream.streamControllerFindSimilar(validQuery, {
 		signal,
 	});
 
@@ -113,6 +131,11 @@ export const streamQueries = {
 				getStreams({ ...query, cursor: pageParam }, signal),
 			initialPageParam: undefined as string | undefined,
 			getNextPageParam: getNextCursorPageParam,
+		}),
+	similar: (query: StreamControllerFindSimilarParams) =>
+		queryOptions({
+			queryKey: streamQueryKeys.similarList(query),
+			queryFn: ({ signal }) => getSimilarStreams(query, signal),
 		}),
 	detail: (query: StreamControllerFindOneParams) =>
 		queryOptions({

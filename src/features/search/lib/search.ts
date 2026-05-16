@@ -1,28 +1,49 @@
-import { noteQueries } from "@entities/note";
-import { useThrottledState } from "@shared/lib/useThrottledState";
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { noteQueries } from '@entities/note';
+import { streamQueries } from '@entities/stream';
+import { useThrottledState } from '@shared/lib/useThrottledState';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 
-type SearchResultProps = {
-    query?: string;
+type UseSearchParams = {
+	query?: string;
+	limit?: number;
 };
 
 const SEARCH_THROTTLE_MS = 500;
 const MAX_SEARCH_QUERY_LENGTH = 500;
+const STREAM_SEARCH_PREFIX = ':';
 
 const normalizeSearchQuery = (query: string) =>
-    query.trim().slice(0, MAX_SEARCH_QUERY_LENGTH);
+	query.trim().slice(0, MAX_SEARCH_QUERY_LENGTH);
 
-export const useSearch = ({ query = '' }: SearchResultProps) => {
-    const normalizedQuery = normalizeSearchQuery(query);
+export const useSearch = ({ query = '', limit }: UseSearchParams) => {
+	const trimmedQuery = query.trim();
+	const isStreamSearch = trimmedQuery.startsWith(STREAM_SEARCH_PREFIX);
+	const rawSearchQuery = isStreamSearch
+		? trimmedQuery.slice(STREAM_SEARCH_PREFIX.length)
+		: trimmedQuery;
+	const searchQuery = normalizeSearchQuery(rawSearchQuery);
 
-    const throttledQuery = useThrottledState(
-        normalizedQuery,
-        SEARCH_THROTTLE_MS,
-    );
+	const throttledQuery = useThrottledState(searchQuery, SEARCH_THROTTLE_MS);
+	const similarQueryParams = {
+		query: throttledQuery,
+		limit,
+	};
+	const hasQuery = Boolean(searchQuery && throttledQuery);
 
-    return useQuery({
-        ...noteQueries.similar({ query: throttledQuery }),
-        enabled: Boolean(normalizedQuery && throttledQuery),
-        placeholderData: keepPreviousData,
-    });
-}
+	const notesQuery = useQuery({
+		...noteQueries.similar(similarQueryParams),
+		enabled: !isStreamSearch && hasQuery,
+		placeholderData: keepPreviousData,
+	});
+
+	const streamsQuery = useQuery({
+		...streamQueries.similar(similarQueryParams),
+		enabled: isStreamSearch && hasQuery,
+		placeholderData: keepPreviousData,
+	});
+
+	return {
+		notesQuery,
+		streamsQuery,
+	};
+};
