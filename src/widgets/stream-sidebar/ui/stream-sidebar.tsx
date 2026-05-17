@@ -1,6 +1,13 @@
-import { streamQueries, useCreateStreamMutation } from '@entities/stream';
+import {
+	isDefaultStream,
+	streamQueries,
+	useCreateStreamMutation,
+} from '@entities/stream';
 import { List, ListItem, ListItemButton, ListItemText } from '@mui/material';
-import { routeConfig } from '@shared/model/route.config';
+import {
+	DEFAULT_STREAM_ROUTE_PARAM,
+	routeConfig,
+} from '@shared/model/route.config';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate } from '@tanstack/react-router';
 
@@ -20,7 +27,7 @@ export const StreamSidebar = ({ selectedStreamId }: StreamSidebarProps) => {
 	const createStreamMutation = useCreateStreamMutation({
 		onSuccess: async (stream) => {
 			await navigate({
-				to: '/stream/{-$streamId}',
+				to: routeConfig.chat,
 				params: {
 					streamId: stream.id,
 				},
@@ -50,7 +57,7 @@ export const StreamSidebar = ({ selectedStreamId }: StreamSidebarProps) => {
 			<ListItem disablePadding>
 				<Link
 					to={routeConfig.chat}
-					params={{ streamId: '' }}
+					params={{ streamId: DEFAULT_STREAM_ROUTE_PARAM }}
 					style={{
 						textDecoration: 'none',
 						color: 'inherit',
@@ -58,7 +65,9 @@ export const StreamSidebar = ({ selectedStreamId }: StreamSidebarProps) => {
 						width: '100%',
 					}}
 				>
-					<ListItemButton selected={!selectedStreamId}>
+					<ListItemButton
+						selected={isDefaultStream(selectedStreamId)}
+					>
 						<ListItemText primary="Все" />
 					</ListItemButton>
 				</Link>

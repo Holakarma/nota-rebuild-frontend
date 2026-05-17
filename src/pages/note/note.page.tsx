@@ -26,7 +26,9 @@ const NotePage = ({ returnContext = 'default' }: NotePageProps) => {
 	const { noteId, streamId } = useUrlParams();
 
 	const isDefaultStream = streamId === DEFAULT_STREAM_ROUTE_PARAM;
-	const returnStreamId = isDefaultStream ? '' : (streamId ?? '');
+	const returnStreamId = isDefaultStream
+		? DEFAULT_STREAM_ROUTE_PARAM
+		: (streamId ?? '');
 	const hasInvalidContext =
 		returnContext !== 'default' && !streamId && !isDefaultStream;
 
@@ -41,7 +43,10 @@ const NotePage = ({ returnContext = 'default' }: NotePageProps) => {
 		return navigate({
 			to: routeConfig.stream,
 			params: {
-				streamId: returnContext === 'stream' ? returnStreamId : '',
+				streamId:
+					returnContext === 'stream'
+						? returnStreamId
+						: DEFAULT_STREAM_ROUTE_PARAM,
 			},
 		});
 	};

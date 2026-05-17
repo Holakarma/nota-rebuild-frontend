@@ -1,5 +1,5 @@
 import { useParams } from "@tanstack/react-router";
-import { isUuid } from "./isUuid";
+import { isUuid } from "./is-uuid";
 import { DEFAULT_STREAM_ROUTE_PARAM } from "@shared/model/route.config";
 
 export const useUrlParams = () => {

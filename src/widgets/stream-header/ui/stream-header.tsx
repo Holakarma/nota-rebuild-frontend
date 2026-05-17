@@ -1,7 +1,10 @@
 import { streamQueries } from '@entities/stream';
 import { Stack, Button, Typography } from '@mui/material';
 import { ArrowForwardIcon } from '@shared/icons/arrow-forward';
-import { routeConfig } from '@shared/model/route.config';
+import {
+	DEFAULT_STREAM_ROUTE_PARAM,
+	routeConfig,
+} from '@shared/model/route.config';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 
@@ -19,6 +22,8 @@ export const StreamHeader = ({
 	const streamName = streamQuery
 		? streamQuery.data?.name || ''
 		: 'Все заметки';
+
+	const targetStreamId = streamId ?? DEFAULT_STREAM_ROUTE_PARAM;
 
 	return (
 		<Stack
@@ -40,7 +45,7 @@ export const StreamHeader = ({
 			</Typography>
 			<Link
 				to={chatMode ? routeConfig.stream : routeConfig.chat}
-				params={{ streamId }}
+				params={{ streamId: targetStreamId }}
 			>
 				<Button
 					variant="text"

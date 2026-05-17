@@ -48,6 +48,7 @@ export const router = createRouter({
 	routeTree,
 	defaultPreload: 'intent',
 	scrollRestoration: true,
+	trailingSlash: 'preserve',
 	defaultPendingComponent: () => (
 		<Stack
 			sx={{

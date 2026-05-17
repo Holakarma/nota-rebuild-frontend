@@ -1,7 +1,4 @@
-import {
-	MessageInput,
-	useMessageDraftStore,
-} from '@features/stream-message';
+import { MessageInput, useMessageDraftStore } from '@features/stream-message';
 import { Box, CircularProgress, Stack } from '@mui/material';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { StreamSidebar } from '@widgets/stream-sidebar';
@@ -16,26 +13,27 @@ import {
 } from '@shared/model/route.config';
 import { StreamHeader } from '@widgets/stream-header';
 import { SearchResult } from '@features/search';
+import { isDefaultStream } from '@entities/stream';
 
 const ChatPage = () => {
 	const navigate = useNavigate();
 	const params = useParams({ strict: false });
-	const messageDraft = useMessageDraftStore(
-		(state) => state.bodyMarkdown,
-	);
+	const messageDraft = useMessageDraftStore((state) => state.bodyMarkdown);
 
 	const rawStreamId =
 		typeof params.streamId === 'string' ? params.streamId : undefined;
 	const streamId = getValidChatStreamId(rawStreamId);
-	const hasInvalidStreamId = Boolean(rawStreamId && !streamId);
+	const hasInvalidStreamId = Boolean(
+		rawStreamId && !streamId && !isDefaultStream(rawStreamId),
+	);
 
 	const chatQuery = useQuery(chatQueries.byStream({ streamId }));
 	const noteRouteStreamId = streamId ?? DEFAULT_STREAM_ROUTE_PARAM;
 
 	const goToStreams = () => {
 		void navigate({
-			to: routeConfig.stream,
-			params: { streamId: '' },
+			to: routeConfig.chat,
+			params: { streamId: DEFAULT_STREAM_ROUTE_PARAM },
 		});
 	};
 

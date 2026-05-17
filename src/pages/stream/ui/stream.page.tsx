@@ -1,25 +1,30 @@
 import { MessageInput, useMessageDraftStore } from '@features/stream-message';
 import { Box, Stack } from '@mui/material';
-import { isUuid } from '@shared/lib/isUuid';
-import { routeConfig } from '@shared/model/route.config';
-import { useNavigate, useParams } from '@tanstack/react-router';
+import { isUuid } from '@shared/lib/is-uuid';
+import {
+	DEFAULT_STREAM_ROUTE_PARAM,
+	routeConfig,
+} from '@shared/model/route.config';
+import { useNavigate } from '@tanstack/react-router';
 import { StreamSidebar } from '@widgets/stream-sidebar';
 import { NoteGrid } from './note-grid';
 import { StreamHeader } from '@widgets/stream-header';
+import { useUrlParams } from '@shared/lib/url-params';
 
 const StreamPage = () => {
 	const navigate = useNavigate();
-	const params = useParams({ strict: false });
-	const messageDraft = useMessageDraftStore((state) => state.bodyMarkdown);
-	const rawStreamId =
-		typeof params.streamId === 'string' ? params.streamId : undefined;
-	const selectedStreamId = isUuid(rawStreamId) ? rawStreamId : undefined;
-	const hasInvalidStreamId = Boolean(rawStreamId && !selectedStreamId);
 
-	const showStreamChat = async ({ streamId }: { streamId?: string }) => {
+	const { streamId } = useUrlParams();
+
+	const rawStreamId = typeof streamId === 'string' ? streamId : undefined;
+	const selectedStreamId = isUuid(rawStreamId) ? rawStreamId : undefined;
+
+	const messageDraft = useMessageDraftStore((state) => state.bodyMarkdown);
+
+	const goToChat = async ({ streamId }: { streamId?: string }) => {
 		await navigate({
 			to: routeConfig.chat,
-			params: { streamId: streamId ?? '' },
+			params: { streamId: streamId ?? DEFAULT_STREAM_ROUTE_PARAM },
 		});
 	};
 
@@ -50,14 +55,12 @@ const StreamPage = () => {
 
 				<NoteGrid
 					selectedStreamId={selectedStreamId}
-					hasInvalidStreamId={hasInvalidStreamId}
 					searchQuery={messageDraft}
 				/>
 
 				<MessageInput
 					streamId={selectedStreamId}
-					disabled={hasInvalidStreamId}
-					onMessageSent={showStreamChat}
+					onMessageSent={goToChat}
 				/>
 			</Stack>
 		</Box>

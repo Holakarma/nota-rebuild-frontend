@@ -3,14 +3,15 @@ import {
 	useCreateStreamMutation,
 	useDetachNoteFromStreamMutation,
 	streamQueries,
+	normalizeStreamName,
 } from '@entities/stream';
-import { Box, Button, Chip, Stack, TextField, Typography } from '@mui/material';
+import { Box, Chip, InputBase, Stack } from '@mui/material';
 import type { NoteListStreamResponseDto, StreamResponseDto } from '@shared/api';
 import { useSnackbar } from '@shared/ui/snackbar';
 import { useQueryClient } from '@tanstack/react-query';
-import { isAxiosError } from 'axios';
-import { useState, type FormEvent } from 'react';
+import { useState } from 'react';
 import { noteQueryKeys } from '@entities/note';
+import { isConflictError } from '@shared/api/errors';
 
 type NoteStreamTagsProps = {
 	noteId: string;
@@ -20,8 +21,6 @@ type NoteStreamTagsProps = {
 
 const MAX_STREAM_NAME_LENGTH = 128;
 const STREAM_SEARCH_LIMIT = 100;
-const normalizeStreamName = (name: string) =>
-	name.trim().replace(/\s+/g, ' ').toLocaleLowerCase();
 
 const isSameStreamName = (
 	stream: Pick<StreamResponseDto, 'name' | 'normalizedName'>,
@@ -35,8 +34,11 @@ const isSameStreamName = (
 	);
 };
 
-const isConflictError = (error: unknown) =>
-	isAxiosError(error) && error.response?.status === 409;
+const isStreamResponse = (value: unknown): value is StreamResponseDto =>
+	typeof value === 'object' &&
+	value !== null &&
+	'id' in value &&
+	typeof value.id === 'string';
 
 export const NoteStreamTags = ({
 	noteId,
@@ -73,7 +75,6 @@ export const NoteStreamTags = ({
 		detachNoteFromStreamMutation.isPending;
 	const isDisabled = disabled || isPending;
 	const normalizedStreamName = normalizeStreamName(streamName);
-	const canAddStream = Boolean(normalizedStreamName) && !isDisabled;
 
 	const findExistingStream = async (name: string) => {
 		const foundStreams = await queryClient.fetchQuery(
@@ -86,6 +87,16 @@ export const NoteStreamTags = ({
 		return foundStreams.find((stream) => isSameStreamName(stream, name));
 	};
 
+	const findRequiredStream = async (name: string) => {
+		const stream = await findExistingStream(name);
+
+		if (!stream) {
+			throw new Error('Stream was not found');
+		}
+
+		return stream;
+	};
+
 	const getOrCreateStream = async (name: string) => {
 		const existingStream = await findExistingStream(name);
 
@@ -94,21 +105,30 @@ export const NoteStreamTags = ({
 		}
 
 		try {
-			return await createStreamMutation.mutateAsync({ name });
+			const createdStream: unknown =
+				await createStreamMutation.mutateAsync({ name });
+
+			if (isStreamResponse(createdStream)) {
+				return createdStream;
+			}
+
+			if (createdStream === true) {
+				return await findRequiredStream(name);
+			}
+
+			throw new Error('Unexpected create stream response');
 		} catch (error) {
 			if (isConflictError(error)) {
-				const stream = await findExistingStream(name);
-
-				if (stream) {
-					return stream;
-				}
+				return await findRequiredStream(name);
 			}
 
 			throw error;
 		}
 	};
 
-	const addStream = async (event: FormEvent<HTMLFormElement>) => {
+	const addStream: React.SubmitEventHandler<HTMLFormElement> = async (
+		event,
+	) => {
 		event.preventDefault();
 
 		const name = streamName.trim();
@@ -172,8 +192,6 @@ export const NoteStreamTags = ({
 				pt: 0.5,
 			}}
 		>
-		
-
 			<Stack
 				direction="row"
 				sx={{
@@ -207,43 +225,25 @@ export const NoteStreamTags = ({
 						}}
 					/>
 				))}
-			</Stack>
-
-			<Box
-				component="form"
-				onSubmit={addStream}
-				sx={{
-					display: 'flex',
-					flex: { xs: '1 1 100%', sm: '0 1 360px' },
-					gap: 1,
-					minWidth: 0,
-				}}
-			>
-				<TextField
-					value={streamName}
-					placeholder="Название потока"
-					aria-label="Название потока"
-					size="small"
-					disabled={isDisabled}
-					onChange={(event) => setStreamName(event.target.value)}
-					slotProps={{
-						htmlInput: {
-							maxLength: MAX_STREAM_NAME_LENGTH,
-						},
-					}}
-					sx={{ flex: '1 1 auto', minWidth: 0 }}
-				/>
-
-				<Button
-					type="submit"
-					variant="outlined"
-					size="small"
-					disabled={!canAddStream}
-					sx={{ flex: '0 0 auto', textTransform: 'none' }}
+				<Box
+					component="form"
+					onSubmit={addStream}
+					sx={{ p: 0 }}
 				>
-					Добавить
-				</Button>
-			</Box>
+					<InputBase
+						value={streamName}
+						placeholder="Поток"
+						size="small"
+						disabled={isDisabled}
+						onChange={(e) => setStreamName(e.target.value)}
+						slotProps={{
+							input: {
+								maxLength: MAX_STREAM_NAME_LENGTH,
+							},
+						}}
+					/>
+				</Box>
+			</Stack>
 		</Stack>
 	);
 };

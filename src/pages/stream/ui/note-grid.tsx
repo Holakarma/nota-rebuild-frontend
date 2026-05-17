@@ -11,7 +11,6 @@ import { Link } from '@tanstack/react-router';
 
 type NoteGridProps = {
 	selectedStreamId?: string;
-	hasInvalidStreamId: boolean;
 	searchQuery?: string;
 };
 
@@ -29,7 +28,6 @@ const normalizeSearchQuery = (query = '') =>
 
 export const NoteGrid = ({
 	selectedStreamId,
-	hasInvalidStreamId,
 	searchQuery = '',
 }: NoteGridProps) => {
 	const normalizedSearchQuery = normalizeSearchQuery(searchQuery);
@@ -42,7 +40,7 @@ export const NoteGrid = ({
 		...noteQueries.list({
 			limit: PAGE_LIMIT,
 		}),
-		enabled: !isSearchMode && !selectedStreamId && !hasInvalidStreamId,
+		enabled: !isSearchMode && !selectedStreamId,
 	});
 	const streamNotesQuery = useQuery({
 		...streamQueries.notes({
@@ -56,7 +54,7 @@ export const NoteGrid = ({
 			query: throttledSearchQuery,
 			limit: SIMILAR_NOTES_LIMIT,
 		}),
-		enabled: isSearchMode && Boolean(throttledSearchQuery) && !hasInvalidStreamId,
+		enabled: isSearchMode && Boolean(throttledSearchQuery),
 		placeholderData: keepPreviousData,
 	});
 
@@ -81,7 +79,7 @@ export const NoteGrid = ({
 			</Stack>
 		);
 	}
-	if (notesQuery.isError || hasInvalidStreamId) {
+	if (notesQuery.isError) {
 		return (
 			<Stack
 				sx={{
@@ -126,7 +124,10 @@ export const NoteGrid = ({
 						>
 							<Link
 								to={routeConfig.streamNote}
-								params={{ streamId: noteRouteStreamId, noteId: note.id }}
+								params={{
+									streamId: noteRouteStreamId,
+									noteId: note.id,
+								}}
 								style={noteLinkStyle}
 							>
 								{noteCard}

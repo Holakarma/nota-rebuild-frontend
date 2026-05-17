@@ -1,6 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button, Stack, TextField } from '@mui/material';
 import { TelegramIcon } from '@shared/icons/telegram';
+import {
+	DEFAULT_STREAM_ROUTE_PARAM,
+	routeConfig,
+} from '@shared/model/route.config';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -28,8 +32,8 @@ export const LoginForm = () => {
 	const signInMutation = useSignInMutation({
 		onSuccess: () => {
 			void navigate({
-				to: '/stream/{-$streamId}',
-				params: {},
+				to: routeConfig.chat,
+				params: { streamId: DEFAULT_STREAM_ROUTE_PARAM },
 				replace: true,
 			});
 		},

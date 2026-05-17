@@ -9,7 +9,10 @@ import { Layout } from '@app/layout/app-layout';
 import { refreshAccessToken } from '@shared/api/auth-session';
 import { getAccessToken } from '@shared/auth';
 import { Stack, Typography } from '@mui/material';
-import { routeConfig } from '@shared/model/route.config';
+import {
+	DEFAULT_STREAM_ROUTE_PARAM,
+	routeConfig,
+} from '@shared/model/route.config';
 
 export const createProtectedRoute = <TRootRoute extends AnyRootRoute>(
 	rootRoute: TRootRoute,
@@ -45,7 +48,7 @@ export const createPublicOnlyRoute = <TRootRoute extends AnyRootRoute>(
 			if (getAccessToken()) {
 				throw redirect({
 					to: routeConfig.chat,
-					params: {},
+					params: { streamId: DEFAULT_STREAM_ROUTE_PARAM },
 					replace: true,
 				});
 			}
@@ -58,7 +61,7 @@ export const createPublicOnlyRoute = <TRootRoute extends AnyRootRoute>(
 
 			throw redirect({
 				to: routeConfig.chat,
-				params: {},
+				params: { streamId: DEFAULT_STREAM_ROUTE_PARAM },
 				replace: true,
 			});
 		},
