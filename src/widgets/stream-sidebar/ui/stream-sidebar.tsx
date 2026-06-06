@@ -2,23 +2,42 @@ import {
 	isDefaultStream,
 	streamQueries,
 	useCreateStreamMutation,
+	useRemoveStreamMutation,
 } from '@entities/stream';
-import { List, ListItem, ListItemButton, ListItemText } from '@mui/material';
+import {
+	List,
+	ListItem,
+	ListItemButton,
+	ListItemText,
+	Menu,
+	MenuItem,
+} from '@mui/material';
 import {
 	DEFAULT_STREAM_ROUTE_PARAM,
 	routeConfig,
 } from '@shared/model/route.config';
+import { useSnackbar } from '@shared/ui/snackbar';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate } from '@tanstack/react-router';
+import { useState, type MouseEvent } from 'react';
 
 type StreamSidebarProps = {
 	selectedStreamId?: string;
 };
 
+type StreamContextMenu = {
+	mouseX: number;
+	mouseY: number;
+	streamId: string;
+} | null;
+
 const PAGE_LIMIT = 20;
 
 export const StreamSidebar = ({ selectedStreamId }: StreamSidebarProps) => {
 	const navigate = useNavigate();
+	const { showError } = useSnackbar();
+	const [streamContextMenu, setStreamContextMenu] =
+		useState<StreamContextMenu>(null);
 	const streamsQuery = useQuery(
 		streamQueries.list({
 			limit: PAGE_LIMIT,
@@ -34,6 +53,20 @@ export const StreamSidebar = ({ selectedStreamId }: StreamSidebarProps) => {
 			});
 		},
 	});
+	const removeStreamMutation = useRemoveStreamMutation({
+		onSuccess: async (_data, variables) => {
+			if (variables.id !== selectedStreamId) {
+				return;
+			}
+
+			await navigate({
+				to: routeConfig.chat,
+				params: {
+					streamId: DEFAULT_STREAM_ROUTE_PARAM,
+				},
+			});
+		},
+	});
 
 	const streams = streamsQuery.data?.result ?? [];
 
@@ -45,6 +78,39 @@ export const StreamSidebar = ({ selectedStreamId }: StreamSidebarProps) => {
 		}
 
 		createStreamMutation.mutate({ name });
+	};
+
+	const openStreamContextMenu = (
+		event: MouseEvent<HTMLElement>,
+		streamId: string,
+	) => {
+		event.preventDefault();
+
+		setStreamContextMenu({
+			mouseX: event.clientX,
+			mouseY: event.clientY,
+			streamId,
+		});
+	};
+
+	const closeStreamContextMenu = () => {
+		setStreamContextMenu(null);
+	};
+
+	const removeSelectedStream = async () => {
+		const streamId = streamContextMenu?.streamId;
+
+		if (!streamId || removeStreamMutation.isPending) {
+			return;
+		}
+
+		closeStreamContextMenu();
+
+		try {
+			await removeStreamMutation.mutateAsync({ id: streamId });
+		} catch {
+			showError('Не удалось удалить поток');
+		}
 	};
 
 	return (
@@ -73,19 +139,22 @@ export const StreamSidebar = ({ selectedStreamId }: StreamSidebarProps) => {
 				</Link>
 			</ListItem>
 
-			<ListItem disablePadding>
+			{/* <ListItem disablePadding>
 				<ListItemButton
 					onClick={createStream}
 					disabled={createStreamMutation.isPending}
 				>
 					<ListItemText primary="+ Новый поток" />
 				</ListItemButton>
-			</ListItem>
+			</ListItem> */}
 
 			{streams.map((stream) => (
 				<ListItem
 					disablePadding
 					key={stream.id}
+					onContextMenu={(event) =>
+						openStreamContextMenu(event, stream.id)
+					}
 				>
 					<Link
 						to={routeConfig.chat}
@@ -115,6 +184,28 @@ export const StreamSidebar = ({ selectedStreamId }: StreamSidebarProps) => {
 					</Link>
 				</ListItem>
 			))}
+
+			<Menu
+				open={Boolean(streamContextMenu)}
+				onClose={closeStreamContextMenu}
+				anchorReference="anchorPosition"
+				anchorPosition={
+					streamContextMenu
+						? {
+								top: streamContextMenu.mouseY,
+								left: streamContextMenu.mouseX,
+							}
+						: undefined
+				}
+			>
+				<MenuItem
+					disabled={removeStreamMutation.isPending}
+					onClick={removeSelectedStream}
+					sx={{ color: 'error.main' }}
+				>
+					Удалить
+				</MenuItem>
+			</Menu>
 		</List>
 	);
 };

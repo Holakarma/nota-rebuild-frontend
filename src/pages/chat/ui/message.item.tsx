@@ -38,16 +38,18 @@ const MessageItemComponent = ({ message, streamId }: MessageItemProps) => {
 };
 
 const UserMessage = memo(({ message }: MessageItemProps) => {
+	const date = new Date(message.createdAt);
+
 	return (
 		<Stack
 			sx={{
 				alignItems: 'end',
 			}}
 		>
-			<Box
+			<Stack
 				sx={{
 					p: 1,
-					borderRadius: 1,
+					borderRadius: 2,
 					borderBottomRightRadius: 0,
 					backgroundColor: 'primary.main',
 					color: 'primary.contrastText',
@@ -64,7 +66,15 @@ const UserMessage = memo(({ message }: MessageItemProps) => {
 				>
 					{message.bodyMarkdown}
 				</Typography>
-			</Box>
+
+				<Typography
+					variant="R12"
+					color="text.secondary"
+					sx={{ textAlign: 'end', mt: 1 }}
+				>
+					{`${date.getHours()}:${date.getMinutes()}`}
+				</Typography>
+			</Stack>
 		</Stack>
 	);
 });

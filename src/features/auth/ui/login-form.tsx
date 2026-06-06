@@ -117,14 +117,14 @@ export const LoginForm = () => {
 							Создать аккаунт
 						</Button>
 
-						<Button
+						{/* <Button
 							variant="outlined"
 							type="button"
 							disabled={isPending}
 							aria-label="Войти через Telegram"
 						>
 							<TelegramIcon />
-						</Button>
+						</Button> */}
 					</Stack>
 				</Stack>
 			</Stack>
