@@ -1,5 +1,5 @@
 import { streamQueries } from '@entities/stream';
-import { Stack, Button, Typography } from '@mui/material';
+import { Box, Stack, Button, Typography } from '@mui/material';
 import { ArrowForwardIcon } from '@shared/icons/arrow-forward';
 import {
 	DEFAULT_STREAM_ROUTE_PARAM,
@@ -33,7 +33,7 @@ export const StreamHeader = ({
 			<Typography
 				variant="M20"
 				sx={{
-					maxWidth: '500px',
+					maxWidth: { xs: '130px', sm: '280px', md: '500px' },
 					overflow: 'hidden',
 					textOverflow: 'ellipsis',
 					display: '-webkit-box',
@@ -49,10 +49,21 @@ export const StreamHeader = ({
 			>
 				<Button
 					variant="text"
-					sx={{ textTransform: 'none', whiteSpace: 'nowrap' }}
+					sx={{ textTransform: 'none', whiteSpace: 'nowrap', minWidth: 0 }}
 					endIcon={<ArrowForwardIcon />}
 				>
-					{chatMode ? 'К списку заметок' : 'К чату'}
+					<Box
+						component="span"
+						sx={{ display: { xs: 'none', sm: 'inline' } }}
+					>
+						{chatMode ? 'К списку заметок' : 'К чату'}
+					</Box>
+					<Box
+						component="span"
+						sx={{ display: { xs: 'inline', sm: 'none' } }}
+					>
+						{chatMode ? 'Заметки' : 'Чат'}
+					</Box>
 				</Button>
 			</Link>
 		</Stack>

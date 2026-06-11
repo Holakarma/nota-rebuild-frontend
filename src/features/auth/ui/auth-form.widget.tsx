@@ -30,7 +30,8 @@ export const AuthFormWidget = ({
 	return (
 		<Card
 			sx={{
-				width: 555,
+				width: { xs: '100%', sm: 555 },
+				maxWidth: 555,
 			}}
 		>
 			<CardContent sx={{ p: 2 }}>

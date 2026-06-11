@@ -17,7 +17,7 @@ export const ChatMessage = ({ message, resultSlot }: ChatMessageProps) => {
 						xs: '100%',
 						sm: 360,
 					},
-					minWidth: 360,
+					minWidth: { xs: 0, sm: 360 },
 					bgcolor: 'action.selected',
 					px: 1.5,
 					py: 1,

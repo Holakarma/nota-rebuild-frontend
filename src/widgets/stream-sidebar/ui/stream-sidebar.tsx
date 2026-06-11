@@ -50,9 +50,21 @@ export const StreamSidebar = ({ selectedStreamId }: StreamSidebarProps) => {
 	return (
 		<List
 			component="aside"
-			sx={{
+			sx={(theme) => ({
 				overflowY: 'auto',
-			}}
+				[theme.breakpoints.down('md')]: {
+					overflowY: 'hidden',
+					overflowX: 'auto',
+					display: 'flex',
+					flexDirection: 'row',
+					alignItems: 'center',
+					borderBottom: `1px solid ${theme.palette.divider}`,
+					'& .MuiListItem-root': {
+						width: 'auto',
+						flexShrink: 0,
+					},
+				},
+			})}
 		>
 			<ListItem disablePadding>
 				<Link
