@@ -31,7 +31,11 @@ export const noteQueryKeys = {
 	list: (query: NoteControllerFindAllParams = {}) =>
 		[...noteQueryKeys.lists(), compactQueryParams(query)] as const,
 	infiniteList: (query: NoteListInfiniteParams = {}) =>
-		[...noteQueryKeys.lists(), 'infinite', compactQueryParams(query)] as const,
+		[
+			...noteQueryKeys.lists(),
+			'infinite',
+			compactQueryParams(query),
+		] as const,
 	similar: () => [...noteQueryKeys.all(), 'similar'] as const,
 	similarList: (query: NoteControllerFindSimilarParams) =>
 		[...noteQueryKeys.similar(), compactQueryParams(query)] as const,
@@ -44,7 +48,9 @@ export const getNotes = async (
 	signal?: AbortSignal,
 ): Promise<NoteControllerFindAllData> => {
 	const validQuery = NoteFindAllParamsSchema.parse(query);
-	const response = await api.note.noteControllerFindAll(validQuery, { signal });
+	const response = await api.note.noteControllerFindAll(validQuery, {
+		signal,
+	});
 
 	return response.data;
 };
@@ -66,7 +72,9 @@ export const getNote = async (
 	signal?: AbortSignal,
 ): Promise<NoteControllerFindOneData> => {
 	const validQuery = NoteFindOneParamsSchema.parse(query);
-	const response = await api.note.noteControllerFindOne(validQuery, { signal });
+	const response = await api.note.noteControllerFindOne(validQuery, {
+		signal,
+	});
 
 	return response.data;
 };
@@ -95,6 +103,6 @@ export const noteQueries = {
 		queryOptions({
 			queryKey: noteQueryKeys.detail(query.id),
 			queryFn: ({ signal }) => getNote(query, signal),
-			staleTime: 2 * 60_000
+			staleTime: 2 * 60_000,
 		}),
 };

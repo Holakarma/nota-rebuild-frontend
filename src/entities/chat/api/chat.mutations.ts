@@ -22,6 +22,7 @@ import {
 } from './chat.schemas';
 import { chatQueryKeys } from './chat.queries';
 import { streamQueryKeys } from '@entities/stream';
+import { noteQueryKeys } from '@entities/note';
 
 export type CreateChatMessageVariables = ChatControllerCreateMessageParams & {
 	data: CreateChatMessageDto;
@@ -174,6 +175,9 @@ export const useCreateChatMessageMutation = (
 				}),
 				queryClient.invalidateQueries({
 					queryKey: streamQueryKeys.lists(),
+				}),
+				queryClient.invalidateQueries({
+					queryKey: noteQueryKeys.lists(),
 				}),
 			]);
 			await options?.onSuccess?.(

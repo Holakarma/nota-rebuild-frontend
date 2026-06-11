@@ -80,8 +80,10 @@ type DetachNoteFromStreamMutationOptions = Omit<
 export const streamMutationKeys = {
 	all: () => [...streamQueryKeys.all(), 'mutation'] as const,
 	create: () => [...streamMutationKeys.all(), 'create'] as const,
-	update: (id?: string) => [...streamMutationKeys.all(), 'update', id] as const,
-	remove: (id?: string) => [...streamMutationKeys.all(), 'remove', id] as const,
+	update: (id?: string) =>
+		[...streamMutationKeys.all(), 'update', id] as const,
+	remove: (id?: string) =>
+		[...streamMutationKeys.all(), 'remove', id] as const,
 	attachNote: (streamId?: string, noteId?: string) =>
 		[...streamMutationKeys.all(), 'attach-note', streamId, noteId] as const,
 	detachNote: (streamId?: string, noteId?: string) =>
@@ -124,7 +126,8 @@ export const attachNoteToStream = async (
 	query: NoteStreamControllerAttachNoteParams,
 ): Promise<NoteStreamControllerAttachNoteData> => {
 	const validQuery = AttachNoteToStreamParamsSchema.parse(query);
-	const response = await api.stream.noteStreamControllerAttachNote(validQuery);
+	const response =
+		await api.stream.noteStreamControllerAttachNote(validQuery);
 
 	return response.data;
 };
@@ -133,7 +136,8 @@ export const detachNoteFromStream = async (
 	query: NoteStreamControllerDetachNoteParams,
 ): Promise<NoteStreamControllerDetachNoteData> => {
 	const validQuery = DetachNoteFromStreamParamsSchema.parse(query);
-	const response = await api.stream.noteStreamControllerDetachNote(validQuery);
+	const response =
+		await api.stream.noteStreamControllerDetachNote(validQuery);
 
 	return response.data;
 };
@@ -150,10 +154,19 @@ export const useCreateStreamMutation = (
 		onSuccess: async (data, variables, onMutateResult, context) => {
 			queryClient.setQueryData(streamQueryKeys.detail(data.id), data);
 			await Promise.all([
-				queryClient.invalidateQueries({ queryKey: streamQueryKeys.lists() }),
-				queryClient.invalidateQueries({ queryKey: streamQueryKeys.similar() }),
+				queryClient.invalidateQueries({
+					queryKey: streamQueryKeys.lists(),
+				}),
+				queryClient.invalidateQueries({
+					queryKey: streamQueryKeys.similar(),
+				}),
 			]);
-			await options?.onSuccess?.(data, variables, onMutateResult, context);
+			await options?.onSuccess?.(
+				data,
+				variables,
+				onMutateResult,
+				context,
+			);
 		},
 	});
 };
@@ -168,7 +181,10 @@ export const useUpdateStreamMutation = (
 		mutationKey: streamMutationKeys.update(),
 		mutationFn: updateStream,
 		onSuccess: async (data, variables, onMutateResult, context) => {
-			queryClient.setQueryData(streamQueryKeys.detail(variables.id), data);
+			queryClient.setQueryData(
+				streamQueryKeys.detail(variables.id),
+				data,
+			);
 			await Promise.all([
 				queryClient.invalidateQueries({
 					queryKey: streamQueryKeys.detail(variables.id),
@@ -176,10 +192,19 @@ export const useUpdateStreamMutation = (
 				queryClient.invalidateQueries({
 					queryKey: streamQueryKeys.notes(variables.id),
 				}),
-				queryClient.invalidateQueries({ queryKey: streamQueryKeys.lists() }),
-				queryClient.invalidateQueries({ queryKey: streamQueryKeys.similar() }),
+				queryClient.invalidateQueries({
+					queryKey: streamQueryKeys.lists(),
+				}),
+				queryClient.invalidateQueries({
+					queryKey: streamQueryKeys.similar(),
+				}),
 			]);
-			await options?.onSuccess?.(data, variables, onMutateResult, context);
+			await options?.onSuccess?.(
+				data,
+				variables,
+				onMutateResult,
+				context,
+			);
 		},
 	});
 };
@@ -201,10 +226,19 @@ export const useRemoveStreamMutation = (
 				queryKey: streamQueryKeys.notes(variables.id),
 			});
 			await Promise.all([
-				queryClient.invalidateQueries({ queryKey: streamQueryKeys.lists() }),
-				queryClient.invalidateQueries({ queryKey: streamQueryKeys.similar() }),
+				queryClient.invalidateQueries({
+					queryKey: streamQueryKeys.lists(),
+				}),
+				queryClient.invalidateQueries({
+					queryKey: streamQueryKeys.similar(),
+				}),
 			]);
-			await options?.onSuccess?.(data, variables, onMutateResult, context);
+			await options?.onSuccess?.(
+				data,
+				variables,
+				onMutateResult,
+				context,
+			);
 		},
 	});
 };
@@ -222,7 +256,12 @@ export const useAttachNoteToStreamMutation = (
 			await queryClient.invalidateQueries({
 				queryKey: streamQueryKeys.notes(variables.streamId),
 			});
-			await options?.onSuccess?.(data, variables, onMutateResult, context);
+			await options?.onSuccess?.(
+				data,
+				variables,
+				onMutateResult,
+				context,
+			);
 		},
 	});
 };
@@ -240,7 +279,12 @@ export const useDetachNoteFromStreamMutation = (
 			await queryClient.invalidateQueries({
 				queryKey: streamQueryKeys.notes(variables.streamId),
 			});
-			await options?.onSuccess?.(data, variables, onMutateResult, context);
+			await options?.onSuccess?.(
+				data,
+				variables,
+				onMutateResult,
+				context,
+			);
 		},
 	});
 };

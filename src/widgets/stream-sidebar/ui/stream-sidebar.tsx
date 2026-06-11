@@ -2,8 +2,17 @@ import {
 	isDefaultStream,
 	streamQueries,
 	useCreateStreamMutation,
+	useRemoveStreamMutation,
 } from '@entities/stream';
-import { List, ListItem, ListItemButton, ListItemText } from '@mui/material';
+import {
+	IconButton,
+	List,
+	ListItem,
+	ListItemButton,
+	ListItemText,
+} from '@mui/material';
+import { StreamResponseDto } from '@shared/api';
+import { DeleteIcon } from '@shared/icons/delete-icon';
 import {
 	DEFAULT_STREAM_ROUTE_PARAM,
 	routeConfig,
@@ -24,6 +33,16 @@ export const StreamSidebar = ({ selectedStreamId }: StreamSidebarProps) => {
 			limit: PAGE_LIMIT,
 		}),
 	);
+	const removeStreamMutation = useRemoveStreamMutation({
+		onSuccess: async () => {
+			await navigate({
+				to: routeConfig.chat,
+				params: {
+					streamId: DEFAULT_STREAM_ROUTE_PARAM,
+				},
+			});
+		},
+	});
 	const createStreamMutation = useCreateStreamMutation({
 		onSuccess: async (stream) => {
 			await navigate({
@@ -45,6 +64,10 @@ export const StreamSidebar = ({ selectedStreamId }: StreamSidebarProps) => {
 		}
 
 		createStreamMutation.mutate({ name });
+	};
+
+	const deleteStream = (stream: StreamResponseDto) => {
+		removeStreamMutation.mutate(stream);
 	};
 
 	return (
@@ -78,13 +101,16 @@ export const StreamSidebar = ({ selectedStreamId }: StreamSidebarProps) => {
 					}}
 				>
 					<ListItemButton
-						selected={isDefaultStream(selectedStreamId)}
+						selected={isDefaultStream(
+							selectedStreamId || DEFAULT_STREAM_ROUTE_PARAM,
+						)}
 					>
 						<ListItemText primary="Все" />
 					</ListItemButton>
 				</Link>
 			</ListItem>
 
+			{/* 
 			<ListItem disablePadding>
 				<ListItemButton
 					onClick={createStream}
@@ -92,22 +118,32 @@ export const StreamSidebar = ({ selectedStreamId }: StreamSidebarProps) => {
 				>
 					<ListItemText primary="+ Новый поток" />
 				</ListItemButton>
-			</ListItem>
+			</ListItem> 
+			*/}
 
 			{streams.map((stream) => (
-				<ListItem
-					disablePadding
+				<Link
+					to={routeConfig.chat}
+					params={{ streamId: stream.id }}
 					key={stream.id}
+					style={{
+						textDecoration: 'none',
+						color: 'inherit',
+						display: 'block',
+					}}
 				>
-					<Link
-						to={routeConfig.chat}
-						params={{ streamId: stream.id }}
-						style={{
-							textDecoration: 'none',
-							color: 'inherit',
-							display: 'block',
-							width: '100%',
-						}}
+					<ListItem
+						disablePadding
+						secondaryAction={
+							<IconButton
+								edge="end"
+								aria-label="delete"
+								onClick={() => deleteStream(stream)}
+								disabled={removeStreamMutation.isPending}
+							>
+								<DeleteIcon />
+							</IconButton>
+						}
 					>
 						<ListItemButton
 							selected={selectedStreamId === stream.id}
@@ -124,8 +160,8 @@ export const StreamSidebar = ({ selectedStreamId }: StreamSidebarProps) => {
 								primary={stream.name}
 							/>
 						</ListItemButton>
-					</Link>
-				</ListItem>
+					</ListItem>
+				</Link>
 			))}
 		</List>
 	);
