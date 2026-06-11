@@ -5,6 +5,12 @@ import {
 	useRemoveStreamMutation,
 } from '@entities/stream';
 import {
+	Button,
+	Dialog,
+	DialogActions,
+	DialogContent,
+	DialogContentText,
+	DialogTitle,
 	IconButton,
 	List,
 	ListItem,
@@ -19,6 +25,7 @@ import {
 } from '@shared/model/route.config';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate } from '@tanstack/react-router';
+import { Fragment, useState } from 'react';
 
 type StreamSidebarProps = {
 	selectedStreamId?: string;
@@ -43,126 +50,134 @@ export const StreamSidebar = ({ selectedStreamId }: StreamSidebarProps) => {
 			});
 		},
 	});
-	const createStreamMutation = useCreateStreamMutation({
-		onSuccess: async (stream) => {
-			await navigate({
-				to: routeConfig.chat,
-				params: {
-					streamId: stream.id,
-				},
-			});
-		},
-	});
+
+	const [streamToDelete, setStreamToDelete] =
+		useState<StreamResponseDto | null>(null);
 
 	const streams = streamsQuery.data?.result ?? [];
 
-	const createStream = () => {
-		const name = window.prompt('Название потока')?.trim();
-
-		if (!name) {
-			return;
-		}
-
-		createStreamMutation.mutate({ name });
-	};
-
-	const deleteStream = (stream: StreamResponseDto) => {
-		removeStreamMutation.mutate(stream);
+	const confirmDelete = () => {
+		if (!streamToDelete) return;
+		removeStreamMutation.mutate(streamToDelete, {
+			onSettled: () => setStreamToDelete(null),
+		});
 	};
 
 	return (
-		<List
-			component="aside"
-			sx={(theme) => ({
-				overflowY: 'auto',
-				[theme.breakpoints.down('md')]: {
-					overflowY: 'hidden',
-					overflowX: 'auto',
-					display: 'flex',
-					flexDirection: 'row',
-					alignItems: 'center',
-					borderBottom: `1px solid ${theme.palette.divider}`,
-					'& .MuiListItem-root': {
-						width: 'auto',
-						flexShrink: 0,
+		<Fragment>
+			<List
+				component="aside"
+				sx={(theme) => ({
+					overflowY: 'auto',
+					[theme.breakpoints.down('md')]: {
+						overflowY: 'hidden',
+						overflowX: 'auto',
+						display: 'flex',
+						flexDirection: 'row',
+						alignItems: 'center',
+						borderBottom: `1px solid ${theme.palette.divider}`,
+						'& .MuiListItem-root': {
+							width: 'auto',
+							flexShrink: 0,
+						},
 					},
-				},
-			})}
-		>
-			<ListItem disablePadding>
-				<Link
-					to={routeConfig.chat}
-					params={{ streamId: DEFAULT_STREAM_ROUTE_PARAM }}
-					style={{
-						textDecoration: 'none',
-						color: 'inherit',
-						display: 'block',
-						width: '100%',
-					}}
-				>
-					<ListItemButton
-						selected={isDefaultStream(
-							selectedStreamId || DEFAULT_STREAM_ROUTE_PARAM,
-						)}
-					>
-						<ListItemText primary="Все" />
-					</ListItemButton>
-				</Link>
-			</ListItem>
-
-			{/* 
-			<ListItem disablePadding>
-				<ListItemButton
-					onClick={createStream}
-					disabled={createStreamMutation.isPending}
-				>
-					<ListItemText primary="+ Новый поток" />
-				</ListItemButton>
-			</ListItem> 
-			*/}
-
-			{streams.map((stream) => (
-				<Link
-					to={routeConfig.chat}
-					params={{ streamId: stream.id }}
-					key={stream.id}
-					style={{
-						textDecoration: 'none',
-						color: 'inherit',
-						display: 'block',
-					}}
-				>
-					<ListItem
-						disablePadding
-						secondaryAction={
-							<IconButton
-								edge="end"
-								aria-label="delete"
-								onClick={() => deleteStream(stream)}
-								disabled={removeStreamMutation.isPending}
-							>
-								<DeleteIcon />
-							</IconButton>
-						}
+				})}
+			>
+				<ListItem disablePadding>
+					<Link
+						to={routeConfig.chat}
+						params={{ streamId: DEFAULT_STREAM_ROUTE_PARAM }}
+						style={{
+							textDecoration: 'none',
+							color: 'inherit',
+							display: 'block',
+							width: '100%',
+						}}
 					>
 						<ListItemButton
-							selected={selectedStreamId === stream.id}
+							selected={isDefaultStream(
+								selectedStreamId || DEFAULT_STREAM_ROUTE_PARAM,
+							)}
 						>
-							<ListItemText
-								sx={{
-									overflow: 'hidden',
-									textOverflow: 'ellipsis',
-									display: '-webkit-box',
-									WebkitLineClamp: 1,
-									WebkitBoxOrient: 'vertical',
-									wordBreak: 'break-word',
-								}}
-								primary={stream.name}
-							/>
+							<ListItemText primary="Все" />
 						</ListItemButton>
-					</ListItem>
-				</Link>
-			))}
-		</List>
+					</Link>
+				</ListItem>
+
+				{streams.map((stream) => (
+					<Link
+						to={routeConfig.chat}
+						params={{ streamId: stream.id }}
+						key={stream.id}
+						style={{
+							textDecoration: 'none',
+							color: 'inherit',
+							display: 'block',
+						}}
+					>
+						<ListItem
+							disablePadding
+							secondaryAction={
+								<IconButton
+									edge="end"
+									aria-label="delete"
+									onClick={(e) => {
+										e.preventDefault();
+										setStreamToDelete(stream);
+									}}
+									disabled={removeStreamMutation.isPending}
+								>
+									<DeleteIcon />
+								</IconButton>
+							}
+						>
+							<ListItemButton
+								selected={selectedStreamId === stream.id}
+							>
+								<ListItemText
+									sx={{
+										overflow: 'hidden',
+										textOverflow: 'ellipsis',
+										display: '-webkit-box',
+										WebkitLineClamp: 1,
+										WebkitBoxOrient: 'vertical',
+										wordBreak: 'break-word',
+									}}
+									primary={stream.name}
+								/>
+							</ListItemButton>
+						</ListItem>
+					</Link>
+				))}
+			</List>
+
+			<Dialog
+				open={!!streamToDelete}
+				onClose={() => setStreamToDelete(null)}
+			>
+				<DialogTitle>Удалить поток?</DialogTitle>
+				<DialogContent>
+					<DialogContentText>
+						Поток «{streamToDelete?.name}» будет удалён
+						безвозвратно.
+					</DialogContentText>
+				</DialogContent>
+				<DialogActions>
+					<Button
+						onClick={() => setStreamToDelete(null)}
+						disabled={removeStreamMutation.isPending}
+					>
+						Отмена
+					</Button>
+					<Button
+						onClick={confirmDelete}
+						color="error"
+						loading={removeStreamMutation.isPending}
+					>
+						Удалить
+					</Button>
+				</DialogActions>
+			</Dialog>
+		</Fragment>
 	);
 };
