@@ -1,6 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button, Stack, TextField } from '@mui/material';
-import { TelegramIcon } from '@shared/icons/telegram';
 import {
 	DEFAULT_STREAM_ROUTE_PARAM,
 	routeConfig,

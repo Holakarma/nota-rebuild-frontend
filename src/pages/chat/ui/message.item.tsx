@@ -1,6 +1,6 @@
 import { NoteCard } from '@entities/note';
 import { StreamCard } from '@entities/stream';
-import { Box, Stack, Typography } from '@mui/material';
+import { Stack, Typography } from '@mui/material';
 import {
 	ChatMessageResponseDto,
 	ChatMessageResultNoteResponseDto,

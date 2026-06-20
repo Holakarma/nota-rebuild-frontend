@@ -1,7 +1,6 @@
 import {
 	isDefaultStream,
 	streamQueries,
-	useCreateStreamMutation,
 	useRemoveStreamMutation,
 } from '@entities/stream';
 import {
@@ -43,16 +42,7 @@ export const StreamSidebar = ({ selectedStreamId }: StreamSidebarProps) => {
 			limit: PAGE_LIMIT,
 		}),
 	);
-	const createStreamMutation = useCreateStreamMutation({
-		onSuccess: async (stream) => {
-			await navigate({
-				to: routeConfig.chat,
-				params: {
-					streamId: stream.id,
-				},
-			});
-		},
-	});
+
 	const removeStreamMutation = useRemoveStreamMutation({
 		onSuccess: async (_data, variables) => {
 			if (variables.id !== selectedStreamId) {
@@ -69,16 +59,6 @@ export const StreamSidebar = ({ selectedStreamId }: StreamSidebarProps) => {
 	});
 
 	const streams = streamsQuery.data?.result ?? [];
-
-	const createStream = () => {
-		const name = window.prompt('Название потока')?.trim();
-
-		if (!name) {
-			return;
-		}
-
-		createStreamMutation.mutate({ name });
-	};
 
 	const openStreamContextMenu = (
 		event: MouseEvent<HTMLElement>,
@@ -138,15 +118,6 @@ export const StreamSidebar = ({ selectedStreamId }: StreamSidebarProps) => {
 					</ListItemButton>
 				</Link>
 			</ListItem>
-
-			{/* <ListItem disablePadding>
-				<ListItemButton
-					onClick={createStream}
-					disabled={createStreamMutation.isPending}
-				>
-					<ListItemText primary="+ Новый поток" />
-				</ListItemButton>
-			</ListItem> */}
 
 			{streams.map((stream) => (
 				<ListItem
